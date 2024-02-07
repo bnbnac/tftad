@@ -69,11 +69,11 @@ class PostServiceTest {
     @DisplayName("글 1페이지 조회")
     void test3() {
         List<Post> requestPosts = IntStream.range(0, 30)
-                        .mapToObj(i -> Post.builder()
-                                .title("제목" + i)
-                                .content("내용" + i)
-                                .build())
-                                .collect(Collectors.toList());
+                .mapToObj(i -> Post.builder()
+                        .title("제목" + i)
+                        .content("내용" + i)
+                        .build())
+                .collect(Collectors.toList());
         postRepository.saveAll(requestPosts);
 
         PostSearch postSearch = PostSearch.builder()
@@ -156,7 +156,7 @@ class PostServiceTest {
         postRepository.save(requestPost);
 
         assertThrows(PostNotFound.class, () -> {
-            postService.get(requestPost.getId() + 1L)  ;
+            postService.get(requestPost.getId() + 1L);
         });
     }
 

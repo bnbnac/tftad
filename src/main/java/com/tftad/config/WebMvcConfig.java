@@ -1,6 +1,5 @@
 package com.tftad.config;
 
-import com.tftad.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -12,11 +11,10 @@ import java.util.List;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    private final SessionRepository sessionRepository;
-    private final AppConfig appConfig;
+    private final JwtProperty jwtProperty;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(new AuthResolver(sessionRepository, appConfig));
+        resolvers.add(new AuthResolver(jwtProperty));
     }
 }

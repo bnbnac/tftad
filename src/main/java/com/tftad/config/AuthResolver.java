@@ -1,8 +1,7 @@
 package com.tftad.config;
 
-import com.tftad.config.data.MemberSession;
+import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.exception.Unauthorized;
-import com.tftad.repository.SessionRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -25,18 +24,34 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class AuthResolver implements HandlerMethodArgumentResolver {
 
-    private final SessionRepository sessionRepository;
-    private final AppConfig appConfig;
+    private final JwtProperty jwtProperty;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.getParameterType().equals(MemberSession.class);
+        return parameter.getParameterType().equals(AuthenticatedMember.class);
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+                                  NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
 
         HttpServletRequest servletRequest = webRequest.getNativeRequest(HttpServletRequest.class);
+        Cookie[] cookies = extractCookies(servletRequest);
+        String jws = extractJws(cookies);
+
+        try {
+            Jws<Claims> claims = parseJws(jws);
+            checkExpiration(claims);
+            String memberId = claims.getPayload().get(jwtProperty.MEMBER_ID, String.class);
+            return new AuthenticatedMember(Long.parseLong(memberId));
+
+        } catch (JwtException e) {
+            log.error("JWT validation failed", e);
+            throw new Unauthorized();
+        }
+    }
+
+    private Cookie[] extractCookies(HttpServletRequest servletRequest) {
         if (servletRequest == null) {
             log.error("servletRequest is null");
             throw new Unauthorized();
@@ -48,29 +63,29 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
             throw new Unauthorized();
         }
 
-        String jws = null;
+        return cookies;
+    }
+
+    private String extractJws(Cookie[] cookies) {
         for (Cookie cookie : cookies) {
-            if ("ML".equals(cookie.getName())) {
-                jws = cookie.getValue();
-                break;
+            if (jwtProperty.getCookieName().equals(cookie.getName())) {
+                return cookie.getValue();
             }
         }
 
-        try {
-            Jws<Claims> claims = Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(appConfig.getKey()))
-                    .build()
-                    .parseSignedClaims(jws);
+        throw new Unauthorized();
+    }
 
-            String memberId = claims.getPayload().get("member_id", String.class);
-            Date expirationDate = new Date(claims.getPayload().get("exp", Long.class) * 1000);
+    private Jws<Claims> parseJws(String jws) {
+        return Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(jwtProperty.getKey()))
+                .build()
+                .parseSignedClaims(jws);
+    }
 
-            if (expirationDate.compareTo(new Date()) < 0) {
-                throw new Unauthorized();
-            }
-            return new MemberSession(Long.parseLong(memberId));
-
-        } catch (JwtException e) {
+    private void checkExpiration(Jws<Claims> claims) {
+        Date expirationDate = new Date(claims.getPayload().get(jwtProperty.EXPIRATION, Long.class) * 1000);
+        if (expirationDate.before(new Date())) {
             throw new Unauthorized();
         }
     }

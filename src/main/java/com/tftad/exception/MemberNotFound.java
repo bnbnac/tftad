@@ -1,10 +1,10 @@
 package com.tftad.exception;
 
-public class UserNotFound extends TftadException {
+public class MemberNotFound extends TftadException {
 
     private static final String MESSAGE = "존재하지 않는 멤버입니다";
 
-    public UserNotFound() {
+    public MemberNotFound() {
         super(MESSAGE);
     }
 

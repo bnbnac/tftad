@@ -1,11 +1,11 @@
 package com.tftad;
 
-import com.tftad.config.AppConfig;
+import com.tftad.config.JwtProperty;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-@EnableConfigurationProperties(AppConfig.class)
+@EnableConfigurationProperties(JwtProperty.class)
 @SpringBootApplication
 public class TftadApplication {
 
