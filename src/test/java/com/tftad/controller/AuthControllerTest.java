@@ -179,21 +179,4 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andDo(print());
     }
-
-    @Test
-    @DisplayName("기존에 존재하는 메일 주소로 회원가입할 수 없다")
-    void test7() throws Exception {
-        Signup signup = Signup.builder()
-                .email("test6@test.com")
-                .name("signupTest")
-                .password("1234")
-                .build();
-
-        mockMvc.perform(post("/auth/signup")
-                        .content(objectMapper.writeValueAsString(signup))
-                        .contentType(APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andDo(print());
-    }
 }

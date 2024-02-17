@@ -57,7 +57,7 @@ class PostControllerTest {
                         .content(json)
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().string("1")) // 흠...
+                .andExpect(content().string("1"))
                 .andDo(print());
     }
 

@@ -1,9 +1,13 @@
 package com.tftad.controller;
 
 import com.tftad.config.data.AuthenticatedMember;
+import com.tftad.config.property.JwtProperty;
 import com.tftad.request.Login;
 import com.tftad.request.Signup;
 import com.tftad.service.AuthService;
+import com.tftad.util.JwtUtility;
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -20,18 +24,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtUtility jwtUtility;
+    private final JwtProperty jwtProperty;
 
     @GetMapping("/foo")
     public Long foo(AuthenticatedMember authenticatedMember) {
-        return authenticatedMember.id;
+        return authenticatedMember.getId();
     }
 
     @PostMapping("/auth/login")
     public ResponseEntity<Object> login(@RequestBody Login login) {
-
         Long memberId = authService.login(login);
-        String jws = authService.generateJws(memberId);
-        ResponseCookie cookie = authService.generateJwtCookie(jws);
+
+        JwtBuilder builder = Jwts.builder()
+                .claim(jwtProperty.MEMBER_ID, String.valueOf(memberId));
+        String jws = jwtUtility.generateJws(builder, jwtProperty.getCookieMaxAgeInDays());
+        ResponseCookie cookie = jwtUtility.generateCookie(
+                jwtProperty.getCookieName(), jws, jwtProperty.getCookieMaxAgeInDays());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())

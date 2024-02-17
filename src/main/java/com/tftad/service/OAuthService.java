@@ -1,0 +1,59 @@
+package com.tftad.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.tftad.config.property.GoogleOAuthProperty;
+import com.tftad.util.JwtUtility;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
+
+@Service
+@RequiredArgsConstructor
+public class OAuthService {
+
+    private final GoogleOAuthProperty googleOAuthProperty;
+
+    public String getChannelId(String code) {
+        String accessToken = getAccessToken(code);
+        JsonNode userResourceNode = getChannelResource(accessToken);
+        return userResourceNode.get("items").get(0).get("id").asText();
+    }
+
+    private JsonNode getChannelResource(String accessToken) {
+        WebClient client = WebClient.create();
+
+        String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getResourceUri())
+                .queryParam("part", "snippet")
+                .queryParam("mine", true)
+                .build().toUriString();
+
+        return client.get()
+                .uri(uri)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .toEntity(JsonNode.class)
+                .block()
+                .getBody();
+    }
+
+    private String getAccessToken(String code) {
+        WebClient client = WebClient.create();
+
+        return client.post()
+                .uri(googleOAuthProperty.getTokenUri())
+                .body(BodyInserters.fromFormData("code", code)
+                        .with("client_id", googleOAuthProperty.getClientId())
+                        .with("client_secret", googleOAuthProperty.getClientSecret())
+                        .with("redirect_uri", googleOAuthProperty.getRedirectUri())
+                        .with("grant_type", "authorization_code"))
+                .retrieve()
+                .toEntity(JsonNode.class)
+                .block()
+                .getBody()
+                .get("access_token")
+                .asText();
+    }
+}

@@ -1,11 +1,12 @@
 package com.tftad;
 
-import com.tftad.config.JwtProperty;
+import com.tftad.config.property.JwtProperty;
+import com.tftad.config.property.GoogleOAuthProperty;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-@EnableConfigurationProperties(JwtProperty.class)
+@EnableConfigurationProperties({JwtProperty.class, GoogleOAuthProperty.class})
 @SpringBootApplication
 public class TftadApplication {
 

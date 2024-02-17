@@ -1,9 +1,11 @@
-package com.tftad.config;
+package com.tftad.config.property;
 
+import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Base64;
 
+@Getter
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperty {
 
@@ -13,28 +15,21 @@ public class JwtProperty {
     private byte[] key;
     private String cookieName;
     private int cookieMaxAgeInDays;
+    private String domain;
 
-    public int getCookieMaxAgeInDays() {
-        return cookieMaxAgeInDays;
+    public void setDomain(String domain) {
+        this.domain = domain;
     }
 
-    public void setCookieMaxAgeInDays(int cookieMaxAgeInDays) {
-        this.cookieMaxAgeInDays = cookieMaxAgeInDays;
-    }
-
-    public String getCookieName() {
-        return cookieName;
+    public void setKey(String key) {
+        this.key = Base64.getDecoder().decode(key);
     }
 
     public void setCookieName(String cookieName) {
         this.cookieName = cookieName;
     }
 
-    public byte[] getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = Base64.getDecoder().decode(key);
+    public void setCookieMaxAgeInDays(int cookieMaxAgeInDays) {
+        this.cookieMaxAgeInDays = cookieMaxAgeInDays;
     }
 }
