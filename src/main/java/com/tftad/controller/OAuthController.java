@@ -1,10 +1,7 @@
 package com.tftad.controller;
 
-import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.property.GoogleOAuthProperty;
-import com.tftad.config.property.JwtProperty;
-import com.tftad.service.OAuthService;
-import com.tftad.util.JwtUtility;
+import com.tftad.utility.Utility;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
@@ -19,35 +16,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class OAuthController {
 
-    private final OAuthService oAuthService;
-    private final JwtUtility jwtUtility;
-    private final JwtProperty jwtProperty;
+    private final Utility utility;
     private final GoogleOAuthProperty googleOAuthProperty;
 
     @GetMapping("/oauth/login/google")
-    public ResponseEntity<Object> getGoogleOAuthRedirection(AuthenticatedMember member, @RequestParam String code) {
-        long memberId = member.getId();
+    public ResponseEntity<Object> getGoogleOAuthRedirection(@RequestParam String code) {
 
         JwtBuilder builder = Jwts.builder()
-                .claim(jwtProperty.MEMBER_ID, String.valueOf(memberId))
-                .claim(googleOAuthProperty.AUTHORIZATION_CODE, code);
-        String jws = jwtUtility.generateJws(builder, googleOAuthProperty.getCookieMaxAgeInDays());
-        ResponseCookie cookie = jwtUtility.generateCookie(
-                jwtProperty.getCookieName(), jws, googleOAuthProperty.getCookieMaxAgeInDays());
+                .claim(GoogleOAuthProperty.AUTHORIZATION_CODE, code);
+        String jws = utility.generateJws(builder, googleOAuthProperty.getCookieMaxAgeInDays());
+
+        ResponseCookie cookie = utility.generateCookie(
+                googleOAuthProperty.getCookieName(), jws, googleOAuthProperty.getCookieMaxAgeInDays());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .build();
     }
 
-    @GetMapping("/oauth/add/channel")
-    public void addYoutubeChannel(AuthenticatedMember member) {
-        String channelId = oAuthService.getChannelId(member.getAuthorizationCode());
-
-        System.out.println("memberId: " + member.getId());
-        System.out.println("code: " + member.getAuthorizationCode());
-
-        // todo
-        System.out.println("add this channelId to member entity: " + channelId);
-    }
 }

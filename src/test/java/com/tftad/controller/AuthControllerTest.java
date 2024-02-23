@@ -1,6 +1,7 @@
 package com.tftad.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tftad.config.property.JwtProperty;
 import com.tftad.repository.MemberRepository;
 import com.tftad.request.Login;
 import com.tftad.request.Signup;
@@ -25,6 +26,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthControllerTest {
+
+    @Autowired
+    private JwtProperty jwtProperty;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -117,11 +121,11 @@ class AuthControllerTest {
                 )
                 .andReturn()
                 .getResponse()
-                .getCookie("ML")
+                .getCookie(jwtProperty.getCookieName())
                 .getValue();
 
         mockMvc.perform(get("/foo")
-                        .cookie(new Cookie("ML", cookie))
+                        .cookie(new Cookie(jwtProperty.getCookieName(), cookie))
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -141,7 +145,6 @@ class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(signup))
         );
 
-
         Login login = Login.builder()
                 .email("test4@test.com")
                 .password("1234")
@@ -152,11 +155,11 @@ class AuthControllerTest {
                 )
                 .andReturn()
                 .getResponse()
-                .getCookie("ML")
+                .getCookie(jwtProperty.getCookieName())
                 .getValue();
 
         mockMvc.perform(get("/foo")
-                        .cookie(new Cookie("ML", cookie + "other"))
+                        .cookie(new Cookie(jwtProperty.getCookieName(), cookie + "other"))
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isUnauthorized())

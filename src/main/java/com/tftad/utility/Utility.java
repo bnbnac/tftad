@@ -1,11 +1,8 @@
-package com.tftad.util;
+package com.tftad.utility;
 
 import com.tftad.config.property.JwtProperty;
 import com.tftad.exception.Unauthorized;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +19,7 @@ import java.util.Date;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtUtility {
+public class Utility {
 
     private final JwtProperty jwtProperty;
 
@@ -69,14 +66,18 @@ public class JwtUtility {
     }
 
     public Jws<Claims> parseJws(String jws) {
-        return Jwts.parser()
-                .verifyWith(Keys.hmacShaKeyFor(jwtProperty.getKey()))
-                .build()
-                .parseSignedClaims(jws);
+        try {
+            return Jwts.parser()
+                    .verifyWith(Keys.hmacShaKeyFor(jwtProperty.getKey()))
+                    .build()
+                    .parseSignedClaims(jws);
+        } catch (JwtException e) {
+            throw new Unauthorized();
+        }
     }
 
-    public void verifyExpiration(Claims payload, String claimName) {
-        Long expiration = payload.get(claimName, Long.class);
+    public void verifyExpiration(Claims payload) {
+        Long expiration = payload.get(JwtProperty.EXPIRATION, Long.class);
         if (expiration == null) {
             throw new Unauthorized();
         }

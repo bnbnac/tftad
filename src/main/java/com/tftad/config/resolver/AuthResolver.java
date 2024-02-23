@@ -1,13 +1,12 @@
 package com.tftad.config.resolver;
 
 import com.tftad.config.data.AuthenticatedMember;
+import com.tftad.config.data.OAuthedMember;
 import com.tftad.config.property.GoogleOAuthProperty;
 import com.tftad.config.property.JwtProperty;
 import com.tftad.exception.Unauthorized;
-import com.tftad.util.JwtUtility;
+import com.tftad.utility.Utility;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -25,36 +24,57 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
 
     private final JwtProperty jwtProperty;
     private final GoogleOAuthProperty googleOAuthProperty;
-    private final JwtUtility jwtUtility;
+    private final Utility utility;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.getParameterType().equals(AuthenticatedMember.class);
+        return parameter.getParameterType().equals(AuthenticatedMember.class)
+                || parameter.getParameterType().equals(OAuthedMember.class);
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+        Cookie[] cookies = utility.extractCookiesFromRequest(webRequest.getNativeRequest(HttpServletRequest.class));
 
-        HttpServletRequest servletRequest = webRequest.getNativeRequest(HttpServletRequest.class);
-        Cookie[] cookies = jwtUtility.extractCookiesFromRequest(servletRequest);
-        String jws = jwtUtility.extractValueByCookieName(cookies, jwtProperty.getCookieName());
+        if (parameter.getParameterType().equals(AuthenticatedMember.class)) {
+            return generateAuthenticatedMember(cookies);
+        }
 
-        try {
-            Jws<Claims> parsedJws = jwtUtility.parseJws(jws);
-            Claims payload = parsedJws.getPayload();
+        return generateOAuthedMember(cookies);
+    }
 
-            jwtUtility.verifyExpiration(payload, jwtProperty.EXPIRATION);
-            String memberId = payload.get(jwtProperty.MEMBER_ID, String.class);
-            String code = payload.get(googleOAuthProperty.AUTHORIZATION_CODE, String.class);
+    private OAuthedMember generateOAuthedMember(Cookie[] cookies) {
+        AuthenticatedMember authenticatedMember = generateAuthenticatedMember(cookies);
+        String memberId = String.valueOf(authenticatedMember.getId());
 
-            return AuthenticatedMember.builder()
-                    .id(memberId)
-                    .authorizationCode(code)
-                    .build();
-        } catch (JwtException e) {
-            log.error("JWT validation failed", e);
+        String jws = utility.extractValueByCookieName(cookies, googleOAuthProperty.getCookieName());
+        if (jws.isBlank()) {
             throw new Unauthorized();
         }
+        Claims payload = utility.parseJws(jws).getPayload();
+
+        utility.verifyExpiration(payload);
+
+        String code = payload.get(GoogleOAuthProperty.AUTHORIZATION_CODE, String.class);
+        return OAuthedMember.builder()
+                .id(memberId)
+                .authorizationCode(code)
+                .build();
+    }
+
+    private AuthenticatedMember generateAuthenticatedMember(Cookie[] cookies) {
+        String jws = utility.extractValueByCookieName(cookies, jwtProperty.getCookieName());
+        if (jws.isBlank()) {
+            throw new Unauthorized();
+        }
+        Claims payload = utility.parseJws(jws).getPayload();
+
+        utility.verifyExpiration(payload);
+
+        String memberId = payload.get(JwtProperty.MEMBER_ID, String.class);
+        return AuthenticatedMember.builder()
+                .id(memberId)
+                .build();
     }
 }

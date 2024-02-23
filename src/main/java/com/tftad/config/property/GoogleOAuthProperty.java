@@ -9,12 +9,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "oauth.google")
 public class GoogleOAuthProperty {
 
-    public String AUTHORIZATION_CODE = "authorization_code";
+    public static final String AUTHORIZATION_CODE = "authorization_code";
+    public static final String YOUTUBE_CHANNEL_URL_PREFIX = "https://www.youtube.com/channel/";
 
+    private String cookieName;
     private String clientId;
     private String clientSecret;
-    private String redirectUri;
-    private String tokenUri;
+    private String redirectUrl;
+    private String tokenUrl;
     private int cookieMaxAgeInDays;
-    private String resourceUri;
+    private String resourceUrl;
 }

@@ -9,8 +9,8 @@ import java.util.Base64;
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperty {
 
-    public String MEMBER_ID = "member_id";
-    public String EXPIRATION = "exp";
+    public static final String MEMBER_ID = "member_id";
+    public static final String EXPIRATION = "exp";
 
     private byte[] key;
     private String cookieName;

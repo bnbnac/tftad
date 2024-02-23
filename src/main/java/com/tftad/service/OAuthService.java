@@ -2,7 +2,6 @@ package com.tftad.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.property.GoogleOAuthProperty;
-import com.tftad.util.JwtUtility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -16,16 +15,12 @@ public class OAuthService {
 
     private final GoogleOAuthProperty googleOAuthProperty;
 
-    public String getChannelId(String code) {
-        String accessToken = getAccessToken(code);
-        JsonNode userResourceNode = getChannelResource(accessToken);
-        return userResourceNode.get("items").get(0).get("id").asText();
-    }
+    public JsonNode queryChannelResource(String code) {
+        String accessToken = queryAccessToken(code);
 
-    private JsonNode getChannelResource(String accessToken) {
         WebClient client = WebClient.create();
 
-        String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getResourceUri())
+        String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getResourceUrl())
                 .queryParam("part", "snippet")
                 .queryParam("mine", true)
                 .build().toUriString();
@@ -39,15 +34,15 @@ public class OAuthService {
                 .getBody();
     }
 
-    private String getAccessToken(String code) {
+    private String queryAccessToken(String code) {
         WebClient client = WebClient.create();
 
         return client.post()
-                .uri(googleOAuthProperty.getTokenUri())
+                .uri(googleOAuthProperty.getTokenUrl())
                 .body(BodyInserters.fromFormData("code", code)
                         .with("client_id", googleOAuthProperty.getClientId())
                         .with("client_secret", googleOAuthProperty.getClientSecret())
-                        .with("redirect_uri", googleOAuthProperty.getRedirectUri())
+                        .with("redirect_uri", googleOAuthProperty.getRedirectUrl())
                         .with("grant_type", "authorization_code"))
                 .retrieve()
                 .toEntity(JsonNode.class)
