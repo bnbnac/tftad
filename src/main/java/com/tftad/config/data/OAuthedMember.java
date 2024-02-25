@@ -21,8 +21,8 @@ public class OAuthedMember {
         private long id;
         private String authorizationCode = "";
 
-        public Builder id(String id) {
-            this.id = Long.parseLong(id);
+        public Builder id(long id) {
+            this.id = id;
             return this;
         }
 

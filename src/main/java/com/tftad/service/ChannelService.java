@@ -27,16 +27,17 @@ public class ChannelService {
         Member member = memberRepository.findById(oAuthedMember.getId())
                 .orElseThrow(MemberNotFound::new);
 
-        JsonNode channelItem = oAuthService
-                .queryChannelResource(oAuthedMember.getAuthorizationCode())
-                .get("items").get(0);
-        Channel channel = generateChannel(channelItem);
+        JsonNode channelResource = oAuthService
+                .queryChannelResource(oAuthedMember.getAuthorizationCode());
+        Channel channel = generateChannel(channelResource);
 
         channel.changeMember(member);
         channelRepository.save(channel);
     }
 
-    private Channel generateChannel(JsonNode channelItem) {
+    private Channel generateChannel(JsonNode channelResource) {
+        JsonNode channelItem = channelResource.get("items").get(0);
+
         String youtubeChannelId = channelItem.get("id").asText();
         validateUniqueChannel(youtubeChannelId);
 

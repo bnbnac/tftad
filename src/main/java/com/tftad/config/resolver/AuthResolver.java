@@ -58,7 +58,7 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
 
         String code = payload.get(GoogleOAuthProperty.AUTHORIZATION_CODE, String.class);
         return OAuthedMember.builder()
-                .id(memberId)
+                .id(Long.parseLong(memberId))
                 .authorizationCode(code)
                 .build();
     }
@@ -74,7 +74,7 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
 
         String memberId = payload.get(JwtProperty.MEMBER_ID, String.class);
         return AuthenticatedMember.builder()
-                .id(memberId)
+                .id(Long.parseLong(memberId))
                 .build();
     }
 }

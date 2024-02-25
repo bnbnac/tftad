@@ -18,8 +18,8 @@ public class AuthenticatedMember {
     public static class Builder {
         private long id;
 
-        public Builder id(String id) {
-            this.id = Long.parseLong(id);
+        public Builder id(long id) {
+            this.id = id;
             return this;
         }
 
