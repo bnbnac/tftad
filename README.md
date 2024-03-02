@@ -17,4 +17,4 @@
 - 시작시간(or 대기중) 예상종료시간
 - url exception 안내화면
 - 무지성 리다이렉션은 안된다. 익셉션컨트롤 안하면 여러번 일어나버림
-
+- oauth query에 대한 exception?

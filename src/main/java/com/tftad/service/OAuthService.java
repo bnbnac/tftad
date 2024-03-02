@@ -55,7 +55,7 @@ public class OAuthService {
     }
 
     public String queryVideoResource(String url) {
-        String videoId = utility.validateYoutubeVideoUrl(url);
+        String videoId = utility.extractVideoId(url);
 
         WebClient client = WebClient.create();
 
