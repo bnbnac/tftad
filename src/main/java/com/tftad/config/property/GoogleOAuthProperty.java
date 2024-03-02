@@ -18,5 +18,7 @@ public class GoogleOAuthProperty {
     private String redirectUrl;
     private String tokenUrl;
     private int cookieMaxAgeInDays;
-    private String resourceUrl;
+    private String channelResourceUrl;
+    private String videoResourceUrl;
+    private String apiKey;
 }

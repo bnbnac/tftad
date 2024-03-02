@@ -2,6 +2,7 @@ package com.tftad.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.property.GoogleOAuthProperty;
+import com.tftad.utility.Utility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -14,13 +15,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class OAuthService {
 
     private final GoogleOAuthProperty googleOAuthProperty;
+    private final Utility utility;
 
     public JsonNode queryChannelResource(String code) {
         String accessToken = queryAccessToken(code);
 
         WebClient client = WebClient.create();
 
-        String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getResourceUrl())
+        String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getChannelResourceUrl())
                 .queryParam("part", "snippet")
                 .queryParam("mine", true)
                 .build().toUriString();
@@ -50,5 +52,26 @@ public class OAuthService {
                 .getBody()
                 .get("access_token")
                 .asText();
+    }
+
+    public String queryVideoResource(String url) {
+        String videoId = utility.validateYoutubeVideoUrl(url);
+
+        WebClient client = WebClient.create();
+
+        String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getVideoResourceUrl())
+                .queryParam("part", "snippet")
+                .queryParam("id", videoId)
+                .queryParam("key", googleOAuthProperty.getApiKey())
+                .build().toUriString();
+
+        JsonNode channelResource = client.get()
+                .uri(uri)
+                .retrieve()
+                .toEntity(JsonNode.class)
+                .block()
+                .getBody();
+
+        return channelResource.get("items").get(0).get("snippet").get("channelId").asText();
     }
 }
