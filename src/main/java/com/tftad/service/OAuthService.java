@@ -54,7 +54,12 @@ public class OAuthService {
                 .asText();
     }
 
-    public String queryVideoResource(String url) {
+    public String getChannelIdByVideoUrl(String url) {
+        JsonNode videoResource = queryVideoResource(url);
+        return videoResource.get("items").get(0).get("snippet").get("channelId").asText();
+    }
+
+    private JsonNode queryVideoResource(String url) {
         String videoId = utility.extractVideoId(url);
 
         WebClient client = WebClient.create();
@@ -65,13 +70,11 @@ public class OAuthService {
                 .queryParam("key", googleOAuthProperty.getApiKey())
                 .build().toUriString();
 
-        JsonNode channelResource = client.get()
+        return client.get()
                 .uri(uri)
                 .retrieve()
                 .toEntity(JsonNode.class)
                 .block()
                 .getBody();
-
-        return channelResource.get("items").get(0).get("snippet").get("channelId").asText();
     }
 }

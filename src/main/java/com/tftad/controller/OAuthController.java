@@ -38,7 +38,7 @@ public class OAuthController {
     }
 
     @GetMapping("/oauth/channel/{url}")
-    public String getChannelIdFromYoutubeUrl(@PathVariable String url) {
-        return oAuthService.queryVideoResource(url);
+    public String getChannelIdByVideoUrl(@PathVariable String url) {
+        return oAuthService.getChannelIdByVideoUrl(url);
     }
 }
