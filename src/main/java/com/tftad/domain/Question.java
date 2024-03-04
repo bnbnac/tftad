@@ -19,13 +19,7 @@ public class Question {
     @JoinColumn(name = "POST_ID")
     private Post post;
 
-    @ManyToOne
-    @JoinColumn(name = "CHANNEL_ID")
-    private Channel channel;
-
-    private String dataUrl;
-
-    private String originVideoUrl;
+    private String questionUrl;
 
     // later. String?
 //    private String answer;

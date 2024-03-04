@@ -48,8 +48,8 @@ public class AuthController {
     }
 
     @PostMapping("/auth/signup")
-    public void signup(@RequestBody Signup signup) {
-        authService.signup(signup);
+    public Long signup(@RequestBody Signup signup) {
+        return authService.signup(signup);
     }
 
 }

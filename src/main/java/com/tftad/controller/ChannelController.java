@@ -13,7 +13,7 @@ public class ChannelController {
     private final ChannelService channelService;
 
     @PostMapping("/oauth/add/channel")
-    public void addChannel(OAuthedMember member) {
-        channelService.addChannel(member);
+    public Long addChannel(OAuthedMember member) {
+        return channelService.addChannel(member);
     }
 }

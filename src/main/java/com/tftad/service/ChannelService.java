@@ -23,7 +23,7 @@ public class ChannelService {
     private final OAuthService oAuthService;
 
     @Transactional
-    public void addChannel(OAuthedMember oAuthedMember) {
+    public Long addChannel(OAuthedMember oAuthedMember) {
         Member member = memberRepository.findById(oAuthedMember.getId())
                 .orElseThrow(MemberNotFound::new);
 
@@ -32,7 +32,7 @@ public class ChannelService {
         Channel channel = generateChannel(channelResource);
 
         channel.changeMember(member);
-        channelRepository.save(channel);
+        return channelRepository.save(channel).getId();
     }
 
     private Channel generateChannel(JsonNode channelResource) {

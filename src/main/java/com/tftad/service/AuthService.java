@@ -30,7 +30,7 @@ public class AuthService {
         return member.getId();
     }
 
-    public void signup(Signup signup) {
+    public Long signup(Signup signup) {
         Optional<Member> memberOptional = memberRepository.findByEmail(signup.getEmail());
         if (memberOptional.isPresent()) {
             throw new InvalidRequest("email", "이미 가입된 이메일입니다");
@@ -43,6 +43,6 @@ public class AuthService {
                 .name(signup.getName())
                 .password(encodedPassword)
                 .build();
-        memberRepository.save(member);
+        return memberRepository.save(member).getId();
     }
 }
