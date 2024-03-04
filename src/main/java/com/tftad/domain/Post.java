@@ -28,6 +28,10 @@ public class Post {
     @Lob
     private String content;
 
+    private Boolean visible = false;
+
+    private String youtubeVideoUrl;
+
     @OneToMany(mappedBy = "post")
     private List<Question> questions = new ArrayList<>();
 

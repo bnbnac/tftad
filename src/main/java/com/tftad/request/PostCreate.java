@@ -14,10 +14,14 @@ public class PostCreate {
     @NotBlank(message = "콘텐츠를 입력해주세요")
     private String content;
 
+    @NotBlank(message = "유튜브 영상 url을 입력해주세요")
+    private String videoUrl;
+
     @Builder
-    public PostCreate(String title, String content) {
+    public PostCreate(String title, String content, String videoUrl) {
         this.title = title;
         this.content = content;
+        this.videoUrl = videoUrl;
     }
 
     public void validateTitle() {

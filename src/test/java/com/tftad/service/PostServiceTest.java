@@ -1,5 +1,6 @@
 package com.tftad.service;
 
+import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Post;
 import com.tftad.exception.PostNotFound;
 import com.tftad.repository.PostRepository;
@@ -39,9 +40,10 @@ class PostServiceTest {
         PostCreate postCreate = PostCreate.builder()
                 .title("제목")
                 .content("내용")
+                .content("url")
                 .build();
 
-        postService.write(postCreate);
+        postService.write(AuthenticatedMember.builder().build(), postCreate);
 
         assertEquals(1L, postRepository.count());
         Post post = postRepository.findAll().iterator().next();

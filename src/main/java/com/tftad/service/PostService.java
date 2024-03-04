@@ -1,36 +1,55 @@
 package com.tftad.service;
 
+import com.tftad.config.data.AuthenticatedMember;
+import com.tftad.domain.Channel;
+import com.tftad.domain.Member;
 import com.tftad.domain.Post;
 import com.tftad.domain.PostEditor;
-import com.tftad.exception.PostNotFound;
+import com.tftad.exception.*;
+import com.tftad.repository.ChannelRepository;
+import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
+import com.tftad.request.external.Analyze;
 import com.tftad.response.PostResponse;
+import com.tftad.utility.Utility;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class PostService {
 
     private final PostRepository postRepository;
+    private final MemberRepository memberRepository;
+    private final ChannelRepository channelRepository;
+    private final OAuthService oAuthService;
+    private final Utility utility;
 
-    public PostService(PostRepository postRepository) {
-        this.postRepository = postRepository;
-    }
+    public Long write(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
+        String videoId = utility.extractVideoId(postCreate.getVideoUrl());
+        validatePostAuthorIsVideoOwner(authenticatedMember, videoId);
 
-    public Long write(PostCreate postCreate) {
         Post post = Post.builder()
                 .title(postCreate.getTitle())
                 .content(postCreate.getContent())
                 .build();
-        postRepository.save(post);
-        return post.getId();
+        Long postId = postRepository.save(post).getId();
+
+        boolean isOk = queryAnalysis(videoId, postId);
+        if (!isOk) {
+            throw new ExtractorServerError();
+        }
+        return postId;
     }
 
     public PostResponse get(Long id) {
@@ -71,4 +90,35 @@ public class PostService {
 
         postRepository.delete(post);
     }
+
+    private void validatePostAuthorIsVideoOwner(AuthenticatedMember authenticatedMember, String videoId) {
+        String channelId = oAuthService.queryVideoResourceToGetChannelId(videoId);
+
+        Member member = memberRepository.findById(authenticatedMember.getId())
+                .orElseThrow(MemberNotFound::new);
+        Channel channel = channelRepository.findByYoutubeChannelId(channelId)
+                .orElseThrow(ChannelNotFound::new);
+
+        if (!member.getId().equals(channel.getMember().getId())) {
+            throw new InvalidRequest("url", "계정에 유튜브 채널을 등록해주세요");
+        }
+    }
+
+    private boolean queryAnalysis(String videoId, Long postId) {
+        Analyze analyze = Analyze.builder()
+                .videoId(videoId)
+                .postId(postId)
+                .build();
+
+        WebClient client = WebClient.create();
+        return client.post()
+                .uri("localhost:5050/analyze")
+                .body(BodyInserters.fromValue(analyze))
+                .retrieve()
+                .toBodilessEntity()
+                .block()
+                .getStatusCode()
+                .is2xxSuccessful();
+    }
+
 }

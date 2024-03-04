@@ -1,11 +1,13 @@
 package com.tftad.controller;
 
+import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
 import com.tftad.service.PostService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,18 +15,15 @@ import java.util.List;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 public class PostController {
 
     private final PostService postService;
 
-    public PostController(PostService postService) {
-        this.postService = postService;
-    }
-
     @PostMapping("/posts")
-    public Long post(@RequestBody @Valid PostCreate request) {
+    public Long post(AuthenticatedMember member, @RequestBody @Valid PostCreate request) {
         request.validateTitle();
-        return postService.write(request);
+        return postService.write(member, request);
     }
 
     @GetMapping("/posts/{postId}")
