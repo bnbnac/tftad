@@ -136,34 +136,35 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    private void validatePostAuthorIsVideoOwner(AuthenticatedMember authenticatedMember, String videoId) {
-        String channelId = oAuthService.queryVideoResourceToGetChannelId(videoId);
-
-        Member member = memberRepository.findById(authenticatedMember.getId())
-                .orElseThrow(MemberNotFound::new);
-        Channel channel = channelRepository.findByYoutubeChannelId(channelId)
-                .orElseThrow(ChannelNotFound::new);
-
-        if (!member.getId().equals(channel.getMember().getId())) {
-            throw new InvalidRequest("url", "계정에 유튜브 채널을 등록해주세요");
-        }
-    }
-
-    private boolean queryAnalysis(String videoId, Long postId) {
-        Analyze analyze = Analyze.builder()
-                .videoId(videoId)
-                .postId(postId)
-                .build();
-
+    public PositionOfPostResponse queryPositionOnWorkingQueue(AuthenticatedMember authenticatedMember, Long postId) {
         WebClient client = WebClient.create();
-        return client.post()
-                .uri("localhost:5050/analyze")
-                .body(BodyInserters.fromValue(analyze))
-                .retrieve()
-                .toBodilessEntity()
-                .block()
-                .getStatusCode()
-                .is2xxSuccessful();
-    }
 
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
+        if (!post.getMember().getId().equals(authenticatedMember.getId())) {
+            throw new InvalidRequest("postId", "게시글의 작성자만 작업상황을 조회할 수 있습니다");
+        }
+
+        if (post.getPublished()) {
+            return PositionOfPostResponse.builder()
+                    .published(true)
+                    .build();
+        }
+
+        ResponseEntity<JsonNode> response = client.get()
+                .uri("http://localhost:5050/position?id=" + postId)
+                .retrieve()
+                .toEntity(JsonNode.class)
+                .block();
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new ExtractorServerError();
+        }
+        String currentPosition = response.getBody().get("current").asText();
+        String initialPosition = response.getBody().get("initial").asText();
+
+        return PositionOfPostResponse.builder()
+                .current(Integer.parseInt(currentPosition))
+                .initial(Integer.parseInt(initialPosition))
+                .build();
+    }
 }

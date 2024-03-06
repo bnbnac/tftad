@@ -4,6 +4,7 @@ import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
+import com.tftad.response.PositionOfPostResponse;
 import com.tftad.response.PostResponse;
 import com.tftad.service.PostService;
 import jakarta.validation.Valid;
@@ -25,6 +26,10 @@ public class PostController {
         request.validateTitle();
         return postService.write(authenticatedMember, request);
     }
+
+    @GetMapping("/posts/position/{postId}")
+    public PositionOfPostResponse position(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
+        return postService.queryPositionOnWorkingQueue(authenticatedMember, postId);
     }
 
     @GetMapping("/posts/{postId}")
