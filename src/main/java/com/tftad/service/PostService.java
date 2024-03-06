@@ -54,10 +54,7 @@ public class PostService {
                 .build();
         Long postId = postRepository.save(post).getId();
 
-        boolean isOk = queryAnalysis(videoId, postId);
-        if (!isOk) {
-            throw new ExtractorServerError();
-        }
+        queryAnalysis(videoId, postId);
         return postId;
     }
 
@@ -89,6 +86,26 @@ public class PostService {
                 .title(post.getTitle())
                 .content(post.getContent())
                 .build();
+    }
+
+    private void queryAnalysis(String videoId, Long postId) {
+        Analysis analysis = Analysis.builder()
+                .videoId(videoId)
+                .postId(postId)
+                .build();
+
+        WebClient client = WebClient.create();
+        boolean ok = client.post()
+                .uri("http://localhost:5050/analysis")
+                .bodyValue(analysis)
+                .retrieve()
+                .toBodilessEntity()
+                .block()
+                .getStatusCode()
+                .is2xxSuccessful();
+        if (!ok) {
+            throw new ExtractorServerError();
+        }
     }
 
     public List<PostResponse> getList(PostSearch postSearch) {

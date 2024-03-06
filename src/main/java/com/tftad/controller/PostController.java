@@ -21,9 +21,10 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping("/posts")
-    public Long post(AuthenticatedMember member, @RequestBody @Valid PostCreate request) {
+    public Long post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate request) {
         request.validateTitle();
-        return postService.write(member, request);
+        return postService.write(authenticatedMember, request);
+    }
     }
 
     @GetMapping("/posts/{postId}")
