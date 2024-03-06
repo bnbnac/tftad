@@ -1,5 +1,6 @@
 package com.tftad.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Channel;
 import com.tftad.domain.Member;
@@ -12,13 +13,15 @@ import com.tftad.repository.PostRepository;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
-import com.tftad.request.external.Analyze;
+import com.tftad.request.external.Analysis;
+import com.tftad.response.PositionOfPostResponse;
 import com.tftad.response.PostResponse;
 import com.tftad.utility.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
@@ -37,11 +40,17 @@ public class PostService {
 
     public Long write(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
         String videoId = utility.extractVideoId(postCreate.getVideoUrl());
-        validatePostAuthorIsVideoOwner(authenticatedMember, videoId);
+        Member member = memberRepository.findById(authenticatedMember.getId())
+                .orElseThrow(MemberNotFound::new);
+
+        validateChannelOwner(member, videoId);
+        validatePostedVideo(member, videoId);
 
         Post post = Post.builder()
                 .title(postCreate.getTitle())
                 .content(postCreate.getContent())
+                .videoId(videoId)
+                .member(member)
                 .build();
         Long postId = postRepository.save(post).getId();
 
@@ -50,6 +59,25 @@ public class PostService {
             throw new ExtractorServerError();
         }
         return postId;
+    }
+
+    private void validateChannelOwner(Member member, String videoId) {
+        String channelId = oAuthService.queryVideoResourceToGetChannelId(videoId);
+        Channel channel = channelRepository.findByYoutubeChannelId(channelId)
+                .orElseThrow(ChannelNotFound::new);
+
+        if (!member.getId().equals(channel.getMember().getId())) {
+            throw new InvalidRequest("url", "계정에 유튜브 채널을 등록해주세요");
+        }
+    }
+
+    private void validatePostedVideo(Member member, String videoId) {
+        List<Post> posts = member.getPosts();
+        for (Post post : posts) {
+            if (post.getVideoId().equals(videoId)) {
+                throw new InvalidRequest("videoId", "이미 등록된 영상입니다");
+            }
+        }
     }
 
     public PostResponse get(Long id) {
