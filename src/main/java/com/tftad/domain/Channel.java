@@ -6,9 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -19,7 +16,7 @@ public class Channel {
     @Column(name = "CHANNEL_ID")
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
 
@@ -28,15 +25,18 @@ public class Channel {
     private String youtubeChannelId;
 
     @Builder
-    public Channel(String title, String youtubeChannelId) {
+    public Channel(String title, String youtubeChannelId, Member member) {
         this.title = title;
         this.youtubeChannelId = youtubeChannelId;
+        if (member != null) {
+            changeMember(member);
+        }
     }
 
-    @OneToMany(mappedBy = "channel")
-    private List<Question> questions = new ArrayList<>();
-
-    public void changeMember(Member member) {
+    private void changeMember(Member member) {
+        if (this.member != null) {
+            this.member.getChannels().remove(this);
+        }
         this.member = member;
         member.getChannels().add(this);
     }

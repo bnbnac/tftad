@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class AuthenticatedMember {
 
-    private final long id;
+    private final Long id;
 
     private AuthenticatedMember(Builder builder) {
         this.id = builder.id;
@@ -16,9 +16,9 @@ public class AuthenticatedMember {
     }
 
     public static class Builder {
-        private long id;
+        private Long id;
 
-        public Builder id(long id) {
+        public Builder id(Long id) {
             this.id = id;
             return this;
         }

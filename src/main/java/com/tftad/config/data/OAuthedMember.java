@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class OAuthedMember {
 
-    private final long id;
+    private final Long id;
     private final String authorizationCode;
 
     private OAuthedMember(Builder builder) {
@@ -18,10 +18,10 @@ public class OAuthedMember {
     }
 
     public static class Builder {
-        private long id;
+        private Long id;
         private String authorizationCode = "";
 
-        public Builder id(long id) {
+        public Builder id(Long id) {
             this.id = id;
             return this;
         }

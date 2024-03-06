@@ -29,13 +29,12 @@ public class ChannelService {
 
         JsonNode channelResource = oAuthService
                 .queryChannelResource(oAuthedMember.getAuthorizationCode());
-        Channel channel = generateChannel(channelResource);
+        Channel channel = generateChannel(member, channelResource);
 
-        channel.changeMember(member);
         return channelRepository.save(channel).getId();
     }
 
-    private Channel generateChannel(JsonNode channelResource) {
+    private Channel generateChannel(Member member, JsonNode channelResource) {
         JsonNode channelItem = channelResource.get("items").get(0);
 
         String youtubeChannelId = channelItem.get("id").asText();
@@ -46,6 +45,7 @@ public class ChannelService {
         return Channel.builder()
                 .youtubeChannelId(youtubeChannelId)
                 .title(channelTitle)
+                .member(member)
                 .build();
     }
 
