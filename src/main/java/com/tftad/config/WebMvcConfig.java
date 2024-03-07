@@ -3,7 +3,6 @@ package com.tftad.config;
 import com.tftad.config.property.GoogleOAuthProperty;
 import com.tftad.config.property.JwtProperty;
 import com.tftad.config.resolver.AuthResolver;
-import com.tftad.utility.Utility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -16,11 +15,10 @@ import java.util.List;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final JwtProperty jwtProperty;
-    private final Utility utility;
     private final GoogleOAuthProperty googleOAuthProperty;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(new AuthResolver(jwtProperty, googleOAuthProperty, utility));
+        resolvers.add(new AuthResolver(jwtProperty, googleOAuthProperty));
     }
 }

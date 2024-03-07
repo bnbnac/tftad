@@ -5,7 +5,6 @@ import com.tftad.config.data.OAuthedMember;
 import com.tftad.config.property.GoogleOAuthProperty;
 import com.tftad.config.property.JwtProperty;
 import com.tftad.exception.Unauthorized;
-import com.tftad.utility.Utility;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +16,8 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import static com.tftad.utility.Utility.*;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,7 +25,6 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
 
     private final JwtProperty jwtProperty;
     private final GoogleOAuthProperty googleOAuthProperty;
-    private final Utility utility;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -35,7 +35,7 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-        Cookie[] cookies = utility.extractCookiesFromRequest(webRequest.getNativeRequest(HttpServletRequest.class));
+        Cookie[] cookies = extractCookiesFromRequest(webRequest.getNativeRequest(HttpServletRequest.class));
 
         if (parameter.getParameterType().equals(AuthenticatedMember.class)) {
             return generateAuthenticatedMember(cookies);
@@ -48,13 +48,13 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
         AuthenticatedMember authenticatedMember = generateAuthenticatedMember(cookies);
         String memberId = String.valueOf(authenticatedMember.getId());
 
-        String jws = utility.extractValueByCookieName(cookies, googleOAuthProperty.getCookieName());
+        String jws = extractValueByCookieName(cookies, googleOAuthProperty.getCookieName());
         if (jws.isBlank()) {
             throw new Unauthorized();
         }
-        Claims payload = utility.parseJws(jws).getPayload();
+        Claims payload = parseJws(jws, jwtProperty.getKey()).getPayload();
 
-        utility.verifyExpiration(payload);
+        verifyExpiration(payload);
 
         String code = payload.get(GoogleOAuthProperty.AUTHORIZATION_CODE, String.class);
         return OAuthedMember.builder()
@@ -64,13 +64,13 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
     }
 
     private AuthenticatedMember generateAuthenticatedMember(Cookie[] cookies) {
-        String jws = utility.extractValueByCookieName(cookies, jwtProperty.getCookieName());
+        String jws = extractValueByCookieName(cookies, jwtProperty.getCookieName());
         if (jws.isBlank()) {
             throw new Unauthorized();
         }
-        Claims payload = utility.parseJws(jws).getPayload();
+        Claims payload = parseJws(jws, jwtProperty.getKey()).getPayload();
 
-        utility.verifyExpiration(payload);
+        verifyExpiration(payload);
 
         String memberId = payload.get(JwtProperty.MEMBER_ID, String.class);
         return AuthenticatedMember.builder()

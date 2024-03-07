@@ -1,31 +1,29 @@
 package com.tftad.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Channel;
 import com.tftad.domain.Member;
 import com.tftad.domain.Post;
 import com.tftad.domain.PostEditor;
-import com.tftad.exception.*;
+import com.tftad.exception.ChannelNotFound;
+import com.tftad.exception.InvalidRequest;
+import com.tftad.exception.MemberNotFound;
+import com.tftad.exception.PostNotFound;
 import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
-import com.tftad.request.external.Analysis;
-import com.tftad.response.PositionOfPostResponse;
 import com.tftad.response.PostResponse;
-import com.tftad.utility.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.tftad.utility.Utility.extractVideoId;
 
 @Slf4j
 @Service
@@ -36,16 +34,17 @@ public class PostService {
     private final MemberRepository memberRepository;
     private final ChannelRepository channelRepository;
     private final OAuthService oAuthService;
-    private final Utility utility;
+    private final ExtractorService extractorService;
 
+    //tx?
     public Long write(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
-        String videoId = utility.extractVideoId(postCreate.getVideoUrl());
+        String videoId = extractVideoId(postCreate.getVideoUrl());
         Member member = memberRepository.findById(authenticatedMember.getId())
                 .orElseThrow(MemberNotFound::new);
 
         validateChannelOwner(member, videoId);
         validatePostedVideo(member, videoId);
-
+// postcrete이 videoid를 갖고있게 할수있나 dto로서 --- utility가 static이 되면될듯?
         Post post = Post.builder()
                 .title(postCreate.getTitle())
                 .content(postCreate.getContent())
@@ -54,7 +53,7 @@ public class PostService {
                 .build();
         Long postId = postRepository.save(post).getId();
 
-        queryAnalysis(videoId, postId);
+        extractorService.queryAnalysis(videoId, postId);
         return postId;
     }
 
@@ -88,26 +87,6 @@ public class PostService {
                 .build();
     }
 
-    private void queryAnalysis(String videoId, Long postId) {
-        Analysis analysis = Analysis.builder()
-                .videoId(videoId)
-                .postId(postId)
-                .build();
-
-        WebClient client = WebClient.create();
-        boolean ok = client.post()
-                .uri("http://localhost:5050/analysis")
-                .bodyValue(analysis)
-                .retrieve()
-                .toBodilessEntity()
-                .block()
-                .getStatusCode()
-                .is2xxSuccessful();
-        if (!ok) {
-            throw new ExtractorServerError();
-        }
-    }
-
     public List<PostResponse> getList(PostSearch postSearch) {
         return postRepository.getList(postSearch).stream()
                 .map(PostResponse::new)
@@ -134,37 +113,5 @@ public class PostService {
                 .orElseThrow(PostNotFound::new);
 
         postRepository.delete(post);
-    }
-
-    public PositionOfPostResponse queryPositionOnWorkingQueue(AuthenticatedMember authenticatedMember, Long postId) {
-        WebClient client = WebClient.create();
-
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
-        if (!post.getMember().getId().equals(authenticatedMember.getId())) {
-            throw new InvalidRequest("postId", "게시글의 작성자만 작업상황을 조회할 수 있습니다");
-        }
-
-        if (post.getPublished()) {
-            return PositionOfPostResponse.builder()
-                    .published(true)
-                    .build();
-        }
-
-        ResponseEntity<JsonNode> response = client.get()
-                .uri("http://localhost:5050/position?id=" + postId)
-                .retrieve()
-                .toEntity(JsonNode.class)
-                .block();
-
-        if (response.getStatusCode() != HttpStatus.OK) {
-            throw new ExtractorServerError();
-        }
-        String currentPosition = response.getBody().get("current").asText();
-        String initialPosition = response.getBody().get("initial").asText();
-
-        return PositionOfPostResponse.builder()
-                .current(Integer.parseInt(currentPosition))
-                .initial(Integer.parseInt(initialPosition))
-                .build();
     }
 }

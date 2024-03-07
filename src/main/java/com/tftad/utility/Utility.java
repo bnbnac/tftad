@@ -7,10 +7,8 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -20,22 +18,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
-@Component
-@RequiredArgsConstructor
 public class Utility {
-
-    private final JwtProperty jwtProperty;
-
-    public String generateJws(JwtBuilder jwtBuilder, int maxAgeInDays) {
+    public static String generateJws(JwtBuilder jwtBuilder, byte[] jwtByteKey, int maxAgeInDays) {
         return jwtBuilder
                 .expiration(Date.from(Instant.now().plus(maxAgeInDays, ChronoUnit.DAYS)))
-                .signWith(Keys.hmacShaKeyFor(jwtProperty.getKey()))
+                .signWith(Keys.hmacShaKeyFor(jwtByteKey))
                 .compact();
     }
 
-    public ResponseCookie generateCookie(String cookieName, String jws, int maxAgeInDays) {
+    public static ResponseCookie generateCookie(String domain, String cookieName, String jws, int maxAgeInDays) {
         return ResponseCookie.from(cookieName, jws)
-                .domain(jwtProperty.getDomain())
+                .domain(domain)
                 .path("/")
                 .httpOnly(true)
                 .secure(false)
@@ -44,7 +37,7 @@ public class Utility {
                 .build();
     }
 
-    public Cookie[] extractCookiesFromRequest(HttpServletRequest servletRequest) {
+    public static Cookie[] extractCookiesFromRequest(HttpServletRequest servletRequest) {
         if (servletRequest == null) {
             log.error("servletRequest is null");
             throw new Unauthorized();
@@ -59,7 +52,7 @@ public class Utility {
         return cookies;
     }
 
-    public String extractValueByCookieName(Cookie[] cookies, String cookieName) {
+    public static String extractValueByCookieName(Cookie[] cookies, String cookieName) {
         for (Cookie cookie : cookies) {
             if (cookieName.equals(cookie.getName())) {
                 return cookie.getValue();
@@ -68,10 +61,10 @@ public class Utility {
         throw new Unauthorized();
     }
 
-    public Jws<Claims> parseJws(String jws) {
+    public static Jws<Claims> parseJws(String jws, byte[] jwtByteKey) {
         try {
             return Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(jwtProperty.getKey()))
+                    .verifyWith(Keys.hmacShaKeyFor(jwtByteKey))
                     .build()
                     .parseSignedClaims(jws);
         } catch (JwtException e) {
@@ -79,7 +72,7 @@ public class Utility {
         }
     }
 
-    public void verifyExpiration(Claims payload) {
+    public static void verifyExpiration(Claims payload) {
         Long expiration = payload.get(JwtProperty.EXPIRATION, Long.class);
         if (expiration == null) {
             throw new Unauthorized();
@@ -91,18 +84,18 @@ public class Utility {
         }
     }
 
-    public String extractVideoId(String url) {
+    public static String extractVideoId(String url) {
         validateVideoUrl(url);
         return applyRegexToExtractVideoId(url);
     }
 
-    private void validateVideoUrl(String url) {
+    public static void validateVideoUrl(String url) {
         if (!url.contains("youtu")) {
             throw new InvalidRequest("url", "올바른 유튜브 영상 주소를 입력해주세요");
         }
     }
 
-    private String applyRegexToExtractVideoId(String url) {
+    public static String applyRegexToExtractVideoId(String url) {
         String regex = "(?<=(v%3D-|v=|v/|youtu.be/))[\\w-]+";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(url);
