@@ -2,6 +2,7 @@ package com.tftad.config.resolver;
 
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.data.OAuthedMember;
+import com.tftad.config.property.AuthProperty;
 import com.tftad.config.property.GoogleOAuthProperty;
 import com.tftad.config.property.JwtProperty;
 import com.tftad.exception.Unauthorized;
@@ -24,7 +25,7 @@ import static com.tftad.utility.Utility.*;
 public class AuthResolver implements HandlerMethodArgumentResolver {
 
     private final JwtProperty jwtProperty;
-    private final GoogleOAuthProperty googleOAuthProperty;
+    private final AuthProperty authProperty;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -48,7 +49,7 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
         AuthenticatedMember authenticatedMember = generateAuthenticatedMember(cookies);
         String memberId = String.valueOf(authenticatedMember.getId());
 
-        String jws = extractValueByCookieName(cookies, googleOAuthProperty.getCookieName());
+        String jws = extractValueByCookieName(cookies, authProperty.getGoogleCookieName());
         if (jws.isBlank()) {
             throw new Unauthorized();
         }
@@ -56,7 +57,7 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
 
         verifyExpiration(payload);
 
-        String code = payload.get(GoogleOAuthProperty.AUTHORIZATION_CODE, String.class);
+        String code = payload.get(AuthProperty.AUTHORIZATION_CODE, String.class);
         return OAuthedMember.builder()
                 .id(Long.parseLong(memberId))
                 .authorizationCode(code)
@@ -64,7 +65,7 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
     }
 
     private AuthenticatedMember generateAuthenticatedMember(Cookie[] cookies) {
-        String jws = extractValueByCookieName(cookies, jwtProperty.getCookieName());
+        String jws = extractValueByCookieName(cookies, authProperty.getTftadCookieName());
         if (jws.isBlank()) {
             throw new Unauthorized();
         }
@@ -72,7 +73,7 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
 
         verifyExpiration(payload);
 
-        String memberId = payload.get(JwtProperty.MEMBER_ID, String.class);
+        String memberId = payload.get(AuthProperty.MEMBER_ID, String.class);
         return AuthenticatedMember.builder()
                 .id(Long.parseLong(memberId))
                 .build();

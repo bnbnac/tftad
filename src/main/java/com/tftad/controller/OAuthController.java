@@ -1,5 +1,6 @@
 package com.tftad.controller;
 
+import com.tftad.config.property.AuthProperty;
 import com.tftad.config.property.GoogleOAuthProperty;
 import com.tftad.config.property.JwtProperty;
 import io.jsonwebtoken.JwtBuilder;
@@ -21,16 +22,20 @@ public class OAuthController {
 
     private final GoogleOAuthProperty googleOAuthProperty;
     private final JwtProperty jwtProperty;
+    private final AuthProperty authProperty;
 
     @GetMapping("/oauth/login/google")
     public ResponseEntity<Object> getGoogleOAuthRedirection(@RequestParam String code) {
 
         JwtBuilder builder = Jwts.builder()
-                .claim(GoogleOAuthProperty.AUTHORIZATION_CODE, code);
-        String jws = generateJws(builder, jwtProperty.getKey(), googleOAuthProperty.getCookieMaxAgeInDays());
+                .claim(AuthProperty.AUTHORIZATION_CODE, code);
+        String jws = generateJws(builder, jwtProperty.getKey(), jwtProperty.getMaxAgeInDays());
 
         ResponseCookie cookie = generateCookie(
-                jwtProperty.getDomain(), googleOAuthProperty.getCookieName(), jws, googleOAuthProperty.getCookieMaxAgeInDays());
+                authProperty.getTftadDomain(),
+                authProperty.getGoogleCookieName(),
+                jws,
+                authProperty.getGoogleCookieMaxAgeInDays());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())

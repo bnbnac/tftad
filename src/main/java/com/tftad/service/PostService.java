@@ -1,6 +1,5 @@
 package com.tftad.service;
 
-import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Channel;
 import com.tftad.domain.Member;
 import com.tftad.domain.Post;
@@ -19,11 +18,10 @@ import com.tftad.response.PostResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.tftad.utility.Utility.extractVideoId;
 
 @Slf4j
 @Service
@@ -36,30 +34,23 @@ public class PostService {
     private final OAuthService oAuthService;
     private final ExtractorService extractorService;
 
-    //tx?
-    public Long write(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
-        String videoId = extractVideoId(postCreate.getVideoUrl());
-        Member member = memberRepository.findById(authenticatedMember.getId())
+    @Transactional
+    public Long write(Long memberId, PostCreate postCreate) {
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFound::new);
 
-        validateChannelOwner(member, videoId);
-        validatePostedVideo(member, videoId);
-// postcrete이 videoid를 갖고있게 할수있나 dto로서 --- utility가 static이 되면될듯?
-        Post post = Post.builder()
-                .title(postCreate.getTitle())
-                .content(postCreate.getContent())
-                .videoId(videoId)
-                .member(member)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        validateChannelOwner(member, postCreate.getVideoId());
+        validatePostedVideo(member, postCreate.getVideoId());
+        Long postId = savePost(member, postCreate);
 
-        extractorService.queryAnalysis(videoId, postId);
+        extractorService.queryAnalysis(postCreate.getVideoId(), postId);
+
         return postId;
     }
 
     private void validateChannelOwner(Member member, String videoId) {
-        String channelId = oAuthService.queryVideoResourceToGetChannelId(videoId);
-        Channel channel = channelRepository.findByYoutubeChannelId(channelId)
+        String youtubeChannelId = oAuthService.queryVideoResourceToGetChannelId(videoId);
+        Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId)
                 .orElseThrow(ChannelNotFound::new);
 
         if (!member.getId().equals(channel.getMember().getId())) {
@@ -74,6 +65,16 @@ public class PostService {
                 throw new InvalidRequest("videoId", "이미 등록된 영상입니다");
             }
         }
+    }
+
+    private Long savePost(Member member, PostCreate postCreate) {
+        Post post = Post.builder()
+                .title(postCreate.getTitle())
+                .content(postCreate.getContent())
+                .videoId(postCreate.getVideoId())
+                .member(member)
+                .build();
+        return postRepository.save(post).getId();
     }
 
     public PostResponse get(Long id) {

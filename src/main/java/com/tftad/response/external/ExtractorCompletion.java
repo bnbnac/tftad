@@ -1,4 +1,4 @@
-package com.tftad.request;
+package com.tftad.response.external;
 
 import lombok.Builder;
 import lombok.Getter;

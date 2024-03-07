@@ -12,9 +12,9 @@ public class PositionOfPostResponse {
     @Builder
     public PositionOfPostResponse(Integer initial, Integer current, boolean published) {
         this.position = Position.builder()
-                    .current(current)
-                    .initial(initial)
-                    .build();
+                .current(current)
+                .initial(initial)
+                .build();
         this.published = published;
     }
 

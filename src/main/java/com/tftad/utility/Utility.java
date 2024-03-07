@@ -1,6 +1,6 @@
 package com.tftad.utility;
 
-import com.tftad.config.property.JwtProperty;
+import com.tftad.config.property.AuthProperty;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.Unauthorized;
 import io.jsonwebtoken.*;
@@ -73,7 +73,7 @@ public class Utility {
     }
 
     public static void verifyExpiration(Claims payload) {
-        Long expiration = payload.get(JwtProperty.EXPIRATION, Long.class);
+        Long expiration = payload.get(AuthProperty.EXPIRATION, Long.class);
         if (expiration == null) {
             throw new Unauthorized();
         }

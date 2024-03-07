@@ -1,14 +1,14 @@
 package com.tftad.controller;
 
+import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Post;
-import com.tftad.request.ExtractorCompletion;
+import com.tftad.response.PositionOfPostResponse;
+import com.tftad.response.external.ExtractorCompletion;
 import com.tftad.service.ExtractorService;
+import com.tftad.service.PostService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,22 +17,31 @@ import java.util.List;
 public class ExtractorController {
 
     private final ExtractorService extractorService;
+    private final PostService postService;
 
     @PostMapping("/extractor/complete")
-    public ResponseEntity<String> getResult(@RequestBody ExtractorCompletion extractorCompletion) {
+    public ResponseEntity<String> saveQuestion(@RequestBody ExtractorCompletion extractorCompletion) {
         Long postId = extractorCompletion.getPostId();
         List<String> result = extractorCompletion.getResult();
 
-        if (result.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error: 'result' list cannot be empty.");
+        if (extractorService.validatePostInExtractorCompletion(postId)) {
+            return ResponseEntity.badRequest().body("POST NOT FOUND or POST IS PUBLISHED ALREADY");
         }
 
-        Post post = extractorService.getPost(postId);
-        extractorService.generateQuestions(post, result);
+        if (extractorCompletion.getResult().isEmpty()) {
+            postService.delete(postId);
+            return ResponseEntity.ok("server got empty result. post "
+                    + extractorCompletion.getPostId() + " has been deleted");
+        }
 
-        //transaction 관리?
+        extractorService.generateQuestions(postId, result);
 
-        return ResponseEntity.ok("Processing complete successfully.");
+        return ResponseEntity.ok("question data saved");
+    }
+
+    @GetMapping("/extractor/position/{postId}")
+    public PositionOfPostResponse getPosition(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
+        Post post = extractorService.validatePostBeforeGetPosition(authenticatedMember.getId(), postId);
+        return extractorService.getPosition(post);
     }
 }

@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 
+import static com.tftad.utility.Utility.extractVideoId;
+
 @Getter
 public class PostCreate {
 
@@ -17,6 +19,8 @@ public class PostCreate {
     @NotBlank(message = "유튜브 영상 url을 입력해주세요")
     private String videoUrl;
 
+    private String videoId;
+
     @Builder
     public PostCreate(String title, String content, String videoUrl) {
         this.title = title;
@@ -28,5 +32,9 @@ public class PostCreate {
         if (title.contains("바보")) {
             throw new InvalidRequest("title", "제목에 바보를 포함할 수 없습니다");
         }
+    }
+
+    public void fillVideoIdFromVideoUrl() {
+        this.videoId = extractVideoId(videoUrl);
     }
 }

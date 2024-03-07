@@ -9,27 +9,15 @@ import java.util.Base64;
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperty {
 
-    public static final String MEMBER_ID = "member_id";
-    public static final String EXPIRATION = "exp";
-
     private byte[] key;
-    private String cookieName;
-    private int cookieMaxAgeInDays;
-    private String domain;
+    private int maxAgeInDays;
 
-    public void setDomain(String domain) {
-        this.domain = domain;
+    public void setMaxAgeInDays(int maxAgeInDays) {
+        this.maxAgeInDays = maxAgeInDays;
     }
 
     public void setKey(String key) {
         this.key = Base64.getDecoder().decode(key);
     }
 
-    public void setCookieName(String cookieName) {
-        this.cookieName = cookieName;
-    }
-
-    public void setCookieMaxAgeInDays(int cookieMaxAgeInDays) {
-        this.cookieMaxAgeInDays = cookieMaxAgeInDays;
-    }
 }
