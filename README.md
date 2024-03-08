@@ -2,9 +2,8 @@
 
 ---
 
-- video resource 봐서 영상이 너무 길면 거부
 - req res 클래스 validation, weblient npe (oauth, extractor)
-- 
+- builder private으로 강제
 
 ---
 

@@ -3,7 +3,6 @@ package com.tftad.config.resolver;
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.data.OAuthedMember;
 import com.tftad.config.property.AuthProperty;
-import com.tftad.config.property.GoogleOAuthProperty;
 import com.tftad.config.property.JwtProperty;
 import com.tftad.exception.Unauthorized;
 import io.jsonwebtoken.Claims;

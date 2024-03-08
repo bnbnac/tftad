@@ -1,10 +1,15 @@
 package com.tftad.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tftad.config.property.AuthProperty;
+import com.tftad.config.property.JwtProperty;
 import com.tftad.domain.Post;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.tftad.utility.Utility.generateJws;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -37,14 +43,31 @@ class PostControllerTest {
     @Autowired
     private PostRepository postRepository;
 
+    @Autowired
+    private AuthProperty authProperty;
+
+    @Autowired
+    private JwtProperty jwtProperty;
+
+    private Cookie cookie;
+
     @BeforeEach
     void clean() {
         postRepository.deleteAll();
+        setCookie();
+    }
+
+    void setCookie() {
+        JwtBuilder builder = Jwts.builder()
+                .claim(AuthProperty.MEMBER_ID, "1");
+        String jws = generateJws(builder, jwtProperty.getKey(), jwtProperty.getMaxAgeInDays());
+
+        cookie = new Cookie(authProperty.getTftadCookieName(), jws);
     }
 
     @Test
-    @DisplayName("글 작성시 글 id를 리턴한다")
-    void test1() throws Exception {
+    @DisplayName("post 작성시 로그인이 필요하다")
+    void test0() throws Exception {
         PostCreate request = PostCreate.builder()
                 .title("제목")
                 .content("내용")
@@ -55,6 +78,27 @@ class PostControllerTest {
         mockMvc.perform(post("/posts")
                         .contentType(APPLICATION_JSON)
                         .content(json)
+                        //.cookie() empty cookie
+                )
+                .andExpect(status().isUnauthorized());
+
+    }
+
+    @Test
+    @DisplayName("post 작성시 post id를 리턴한다")
+    void test1() throws Exception {
+        PostCreate request = PostCreate.builder()
+                .title("제목")
+                .content("내용")
+                .videoUrl("https://youtu.be/j46wk31wTsY?si=yo8SNgg_HYBSJfz_")
+                .build();
+
+        String json = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(post("/posts")
+                        .contentType(APPLICATION_JSON)
+                        .content(json)
+                        .cookie(cookie)
                 )
                 .andExpect(status().isOk())
                 .andExpect(content().string("1"))
@@ -62,15 +106,17 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("글 작성시 title 값은 필수다")
+    @DisplayName("post 작성시 title 값은 필수다")
     void test2_1() throws Exception {
         PostCreate request = PostCreate.builder()
                 .content("내용")
+                .videoUrl("url")
                 .build();
 
         mockMvc.perform(post("/posts")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
+                        .cookie(cookie)
                 )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("400"))
@@ -81,15 +127,17 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("글 작성시 content 값은 필수다")
+    @DisplayName("post 작성시 content 값은 필수다")
     void test2_2() throws Exception {
         PostCreate request = PostCreate.builder()
                 .title("제목")
+                .videoUrl("url")
                 .build();
 
         mockMvc.perform(post("/posts")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
+                        .cookie(cookie)
                 )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("400"))
@@ -100,17 +148,19 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("글 작성시 DB에 값이 저장된다")
+    @DisplayName("post 작성시 DB에 값이 저장된다")
     void test3() throws Exception {
         PostCreate request = PostCreate.builder()
                 .title("제목입니다")
                 .content("내용입니다")
+                .videoUrl("url")
                 .build();
         String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/posts")
                         .contentType(APPLICATION_JSON)
                         .content(json)
+                        .cookie(cookie)
                 )
                 .andExpect(status().isOk())
                 .andDo(print());
@@ -123,7 +173,7 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("글 1개 조회")
+    @DisplayName("post 1개 조회")
     void test4() throws Exception {
         Post post = Post.builder()
                 .title("123451234512345")
@@ -142,7 +192,7 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("글 여러개 조회")
+    @DisplayName("post 여러개 조회")
     void test5() throws Exception {
         List<Post> requestPosts = IntStream.range(0, 30)
                 .mapToObj(i -> Post.builder()
@@ -186,7 +236,7 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("글 제목 수정")
+    @DisplayName("post 제목 수정")
     void test7() throws Exception {
         Post post = Post.builder()
                 .title("제목")
@@ -207,7 +257,7 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("글 삭제")
+    @DisplayName("post 삭제")
     void test8() throws Exception {
         Post post = Post.builder()
                 .title("제목")
@@ -261,11 +311,13 @@ class PostControllerTest {
         PostCreate request = PostCreate.builder()
                 .title("나는 바보다")
                 .content("내용")
+                .videoUrl("url")
                 .build();
 
         mockMvc.perform(post("/posts")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
+                        .cookie(cookie)
                 )
                 .andExpect(status().isBadRequest())
                 .andDo(print());

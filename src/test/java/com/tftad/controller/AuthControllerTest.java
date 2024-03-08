@@ -1,6 +1,7 @@
 package com.tftad.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tftad.config.property.AuthProperty;
 import com.tftad.config.property.JwtProperty;
 import com.tftad.repository.MemberRepository;
 import com.tftad.request.Login;
@@ -29,6 +30,9 @@ class AuthControllerTest {
 
     @Autowired
     private JwtProperty jwtProperty;
+
+    @Autowired
+    private AuthProperty authProperty;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -121,11 +125,11 @@ class AuthControllerTest {
                 )
                 .andReturn()
                 .getResponse()
-                .getCookie(jwtProperty.getCookieName())
+                .getCookie(authProperty.getTftadCookieName())
                 .getValue();
 
         mockMvc.perform(get("/foo")
-                        .cookie(new Cookie(jwtProperty.getCookieName(), cookie))
+                        .cookie(new Cookie(authProperty.getTftadCookieName(), cookie))
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -133,7 +137,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("검증되지 않은 세션값으로 권한이 필요한 페이지에 접속할 수 없다")
+    @DisplayName("검증되지 않은 인증정보로 권한이 필요한 페이지에 접속할 수 없다")
     void test5() throws Exception {
         Signup signup = Signup.builder()
                 .name("hi")
@@ -155,11 +159,11 @@ class AuthControllerTest {
                 )
                 .andReturn()
                 .getResponse()
-                .getCookie(jwtProperty.getCookieName())
+                .getCookie(authProperty.getTftadCookieName())
                 .getValue();
 
         mockMvc.perform(get("/foo")
-                        .cookie(new Cookie(jwtProperty.getCookieName(), cookie + "other"))
+                        .cookie(new Cookie(authProperty.getTftadCookieName(), cookie + "other"))
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isUnauthorized())

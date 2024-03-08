@@ -2,7 +2,6 @@ package com.tftad.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.property.GoogleOAuthProperty;
-import com.tftad.utility.Utility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class OAuthService {
 
     private final GoogleOAuthProperty googleOAuthProperty;
-    private final Utility utility;
 
     public JsonNode queryChannelResource(String code) {
         String accessToken = queryAccessToken(code);

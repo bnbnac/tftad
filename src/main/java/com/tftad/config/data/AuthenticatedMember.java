@@ -12,7 +12,7 @@ public class AuthenticatedMember {
     }
 
     public static Builder builder() {
-        return new Builder();
+        return new AuthenticatedMember.Builder();
     }
 
     public static class Builder {
