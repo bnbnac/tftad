@@ -2,10 +2,13 @@ package com.tftad.controller;
 
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Post;
+import com.tftad.exception.ExtractorServerError;
+import com.tftad.exception.InvalidRequest;
 import com.tftad.response.PositionOfPostResponse;
 import com.tftad.response.external.ExtractorCompletion;
 import com.tftad.service.ExtractorService;
 import com.tftad.service.PostService;
+import com.tftad.service.QuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,30 +21,36 @@ public class ExtractorController {
 
     private final ExtractorService extractorService;
     private final PostService postService;
+    private final QuestionService questionService;
 
     @PostMapping("/extractor/complete")
-    public ResponseEntity<String> saveQuestion(@RequestBody ExtractorCompletion extractorCompletion) {
+    public ResponseEntity<String> getExtractorResult(@RequestBody ExtractorCompletion extractorCompletion) {
         Long postId = extractorCompletion.getPostId();
-        List<String> result = extractorCompletion.getResult();
+        List<String> extractorResult = extractorCompletion.getResult();
 
-        if (extractorService.validatePostInExtractorCompletion(postId)) {
-            return ResponseEntity.badRequest().body("POST NOT FOUND or POST IS PUBLISHED ALREADY");
+        try {
+            Post post = postService.validateCompletedPost(postId);
+            validateExtractorResult(postId, extractorResult);
+            questionService.saveQuestionsOnThePostFromExtractorResult(post, extractorResult);
+            postService.showPost(post);
+            return ResponseEntity.ok("question data saved");
+        } catch (InvalidRequest e) {
+            return ResponseEntity.badRequest().body(e.getMessage() + " post id: " + postId);
+        } catch (ExtractorServerError e) {
+            return ResponseEntity.ok("server got empty result. post has been deleted. post id: " + postId);
         }
+    }
 
-        if (extractorCompletion.getResult().isEmpty()) {
+    private void validateExtractorResult(Long postId, List<String> extractorResult) {
+        if (extractorResult.isEmpty()) {
             postService.delete(postId);
-            return ResponseEntity.ok("server got empty result. post "
-                    + extractorCompletion.getPostId() + " has been deleted");
+            throw new ExtractorServerError();
         }
-
-        extractorService.generateQuestions(postId, result);
-
-        return ResponseEntity.ok("question data saved");
     }
 
     @GetMapping("/extractor/position/{postId}")
     public PositionOfPostResponse getPosition(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
-        Post post = extractorService.validatePostBeforeGetPosition(authenticatedMember.getId(), postId);
+        Post post = postService.validatePostBeforeGetPosition(authenticatedMember.getId(), postId);
         return extractorService.getPosition(post);
     }
 }

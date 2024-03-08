@@ -1,15 +1,10 @@
 package com.tftad.service;
 
-import com.tftad.domain.Channel;
 import com.tftad.domain.Member;
 import com.tftad.domain.Post;
 import com.tftad.domain.PostEditor;
-import com.tftad.exception.ChannelNotFound;
 import com.tftad.exception.InvalidRequest;
-import com.tftad.exception.MemberNotFound;
 import com.tftad.exception.PostNotFound;
-import com.tftad.repository.ChannelRepository;
-import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
@@ -18,7 +13,6 @@ import com.tftad.response.PostResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,45 +23,8 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final MemberRepository memberRepository;
-    private final ChannelRepository channelRepository;
-    private final OAuthService oAuthService;
-    private final ExtractorService extractorService;
 
-    @Transactional
-    public Long write(Long memberId, PostCreate postCreate) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(MemberNotFound::new);
-
-        validateChannelOwner(member, postCreate.getVideoId());
-        validatePostedVideo(member, postCreate.getVideoId());
-        Long postId = savePost(member, postCreate);
-
-        extractorService.queryAnalysis(postCreate.getVideoId(), postId);
-
-        return postId;
-    }
-
-    private void validateChannelOwner(Member member, String videoId) {
-        String youtubeChannelId = oAuthService.queryVideoResourceToGetChannelId(videoId);
-        Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId)
-                .orElseThrow(ChannelNotFound::new);
-
-        if (!member.getId().equals(channel.getMember().getId())) {
-            throw new InvalidRequest("url", "계정에 유튜브 채널을 등록해주세요");
-        }
-    }
-
-    private void validatePostedVideo(Member member, String videoId) {
-        List<Post> posts = member.getPosts();
-        for (Post post : posts) {
-            if (post.getVideoId().equals(videoId)) {
-                throw new InvalidRequest("videoId", "이미 등록된 영상입니다");
-            }
-        }
-    }
-
-    private Long savePost(Member member, PostCreate postCreate) {
+    public Long savePost(Member member, PostCreate postCreate) {
         Post post = Post.builder()
                 .title(postCreate.getTitle())
                 .content(postCreate.getContent())
@@ -114,5 +71,42 @@ public class PostService {
                 .orElseThrow(PostNotFound::new);
 
         postRepository.delete(post);
+    }
+
+    public Post validateCompletedPost(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new InvalidRequest("postId", "존재하지 않는 게시글입니다"));
+
+        if (post.getPublished()) {
+            throw new InvalidRequest("postId", "이미 발행된 게시글입니다");
+        }
+
+        return post;
+    }
+
+    public Post getPostById(Long postId) {
+        return postRepository.findById(postId).orElseThrow(PostNotFound::new);
+    }
+
+    public void showPost(Post post) {
+        post.show();
+        postRepository.save(post);
+    }
+
+    public void validatePostedVideo(String videoId) {
+        postRepository.findByVideoId(videoId)
+                .ifPresent(p -> {
+                    throw new InvalidRequest(
+                            "videoId", "이미 등록된 영상입니다. postId: " + p.getId()
+                    );
+                });
+    }
+
+    public Post validatePostBeforeGetPosition(Long memberId, Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
+        if (!memberId.equals(post.getMember().getId())) {
+            throw new InvalidRequest("postId", "게시글의 작성자만 작업상황을 조회할 수 있습니다");
+        }
+        return post;
     }
 }

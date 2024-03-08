@@ -1,7 +1,6 @@
 package com.tftad.controller;
 
 import com.tftad.config.property.AuthProperty;
-import com.tftad.config.property.GoogleOAuthProperty;
 import com.tftad.config.property.JwtProperty;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -20,7 +19,6 @@ import static com.tftad.utility.Utility.generateJws;
 @RequiredArgsConstructor
 public class OAuthController {
 
-    private final GoogleOAuthProperty googleOAuthProperty;
     private final JwtProperty jwtProperty;
     private final AuthProperty authProperty;
 

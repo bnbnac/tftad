@@ -1,58 +1,56 @@
 package com.tftad.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.tftad.config.data.OAuthedMember;
 import com.tftad.domain.Channel;
+import com.tftad.domain.ChannelData;
 import com.tftad.domain.Member;
+import com.tftad.exception.ChannelNotFound;
 import com.tftad.exception.InvalidRequest;
-import com.tftad.exception.MemberNotFound;
 import com.tftad.repository.ChannelRepository;
-import com.tftad.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ChannelService {
 
     private final ChannelRepository channelRepository;
-    private final MemberRepository memberRepository;
-    private final OAuthService oAuthService;
 
-    @Transactional
-    public Long addChannel(OAuthedMember oAuthedMember) {
-        Member member = memberRepository.findById(oAuthedMember.getId())
-                .orElseThrow(MemberNotFound::new);
-
-        JsonNode channelResource = oAuthService
-                .queryChannelResource(oAuthedMember.getAuthorizationCode());
-        Channel channel = generateChannel(member, channelResource);
-
-        return channelRepository.save(channel).getId();
-    }
-
-    private Channel generateChannel(Member member, JsonNode channelResource) {
+    public ChannelData generateChannelData(JsonNode channelResource) {
         JsonNode channelItem = channelResource.get("items").get(0);
-
         String youtubeChannelId = channelItem.get("id").asText();
-        validateUniqueChannel(youtubeChannelId);
-
         String channelTitle = channelItem.get("snippet").get("title").asText();
 
-        return Channel.builder()
-                .youtubeChannelId(youtubeChannelId)
+        return ChannelData.builder()
                 .title(channelTitle)
-                .member(member)
+                .youtubeChannelId(youtubeChannelId)
                 .build();
     }
 
-    private void validateUniqueChannel(String youtubeChannelId) {
-        Optional<Channel> presentChannel = channelRepository.findByYoutubeChannelId(youtubeChannelId);
-        if (presentChannel.isPresent()) {
-            throw new InvalidRequest("youtubeChannelId", "이미 등록된 채널입니다");
+    public void validateAddedChannel(String youtubeChannelId) {
+        channelRepository.findByYoutubeChannelId(youtubeChannelId)
+                .ifPresent(c -> {
+                    throw new InvalidRequest(
+                            "youtubeChannelId", "이미 등록된 채널입니다. channelId: " + c.getId()
+                    );
+                });
+    }
+
+    public void validateChannelOwner(Member member, String youtubeChannelId) {
+        Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId)
+                .orElseThrow(ChannelNotFound::new);
+
+        if (!member.getId().equals(channel.getMember().getId())) {
+            throw new InvalidRequest("url", "계정에 유튜브 채널을 등록해주세요");
         }
+    }
+
+    public Long saveChannel(Member member, ChannelData channelData) {
+        Channel channel = Channel.builder()
+                .youtubeChannelId(channelData.getYoutubeChannelId())
+                .title(channelData.getTitle())
+                .member(member)
+                .build();
+        return channelRepository.save(channel).getId();
     }
 }

@@ -21,5 +21,5 @@
 - 근데 원래 list.remove같은걸 쓰나
 - external server들한테 jsonnode로 받아오는거 없애기
 - oauth 관련객체도 추상화할필요가 있음. api 문서좀 읽고 v3impl 이런식으로
-- extractorService.validatePostInExtractorCompletion returns enum
-- 
+- postservice.validatePostInExtractorCompletion returns enum
+- 로그인이 필요한 api 테스트에서 mock login

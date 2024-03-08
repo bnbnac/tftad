@@ -1,6 +1,5 @@
 package com.tftad.request;
 
-import com.tftad.exception.InvalidRequest;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,12 +25,6 @@ public class PostCreate {
         this.title = title;
         this.content = content;
         this.videoUrl = videoUrl;
-    }
-
-    public void validateTitle() {
-        if (title.contains("바보")) {
-            throw new InvalidRequest("title", "제목에 바보를 포함할 수 없습니다");
-        }
     }
 
     public void fillVideoIdFromVideoUrl() {

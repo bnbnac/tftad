@@ -71,9 +71,4 @@ public class Post {
     public void hide() {
         this.published = false;
     }
-
-    public String generateYoutubeVideoUrl() {
-        String prefix = "https://www.youtube.com/watch?v=";
-        return prefix + videoId;
-    }
 }
