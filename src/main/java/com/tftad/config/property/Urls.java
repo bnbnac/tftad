@@ -6,9 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "extractor")
-public class ExtractorProperty {
-
-    private String url;
-
+@ConfigurationProperties(prefix = "urls")
+public class Urls {
+    private String extractorServer;
 }

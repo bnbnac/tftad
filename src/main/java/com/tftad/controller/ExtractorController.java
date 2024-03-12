@@ -4,11 +4,12 @@ import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Post;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
+import com.tftad.request.ExtractorCompletion;
 import com.tftad.response.PositionOfPostResponse;
-import com.tftad.response.external.ExtractorCompletion;
 import com.tftad.service.ExtractorService;
 import com.tftad.service.PostService;
 import com.tftad.service.QuestionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,16 +25,16 @@ public class ExtractorController {
     private final QuestionService questionService;
 
     @PostMapping("/extractor/complete")
-    public ResponseEntity<String> getExtractorResult(@RequestBody ExtractorCompletion extractorCompletion) {
+    public ResponseEntity<String> getExtractorResult(@RequestBody @Valid ExtractorCompletion extractorCompletion) {
         Long postId = extractorCompletion.getPostId();
         List<String> extractorResult = extractorCompletion.getResult();
 
         try {
-            Post post = postService.validateCompletedPost(postId);
-            validateExtractorResult(postId, extractorResult);
-            questionService.saveQuestionsOnThePostFromExtractorResult(post, extractorResult);
+            Post post = postService.validatePublishedPost(postId);
+            postService.validateExtractorResultOrDeletePost(postId, extractorResult);
+            questionService.saveQuestionsFromExtractorResult(post, extractorResult);
             postService.showPost(post);
-            return ResponseEntity.ok("question data saved");
+            return ResponseEntity.ok("question data saved. post id: " + postId);
         } catch (InvalidRequest e) {
             return ResponseEntity.badRequest().body(e.getMessage() + " post id: " + postId);
         } catch (ExtractorServerError e) {
@@ -41,16 +42,9 @@ public class ExtractorController {
         }
     }
 
-    private void validateExtractorResult(Long postId, List<String> extractorResult) {
-        if (extractorResult.isEmpty()) {
-            postService.delete(postId);
-            throw new ExtractorServerError();
-        }
-    }
-
     @GetMapping("/extractor/position/{postId}")
     public PositionOfPostResponse getPosition(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
-        Post post = postService.validatePostBeforeGetPosition(authenticatedMember.getId(), postId);
+        Post post = postService.validateToGetPosition(authenticatedMember.getId(), postId);
         return extractorService.getPosition(post);
     }
 }

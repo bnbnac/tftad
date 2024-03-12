@@ -1,5 +1,6 @@
 package com.tftad.domain;
 
+import io.jsonwebtoken.lang.Assert;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -36,6 +37,10 @@ public class Member {
 
     @Builder
     public Member(String email, String name, String password) {
+        Assert.hasText(email, "email must not be null");
+        Assert.hasText(name, "name must not be null");
+        Assert.hasText(password, "password must not be null");
+
         this.email = email;
         this.name = name;
         this.password = password;

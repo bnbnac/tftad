@@ -90,7 +90,7 @@ public class Utility {
     }
 
     public static void validateVideoUrl(String url) {
-        if (!url.contains("youtu")) {
+        if (url == null || !url.contains("youtu")) {
             throw new InvalidRequest("url", "올바른 유튜브 영상 주소를 입력해주세요");
         }
     }

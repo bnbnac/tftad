@@ -1,5 +1,6 @@
 package com.tftad.domain;
 
+import io.jsonwebtoken.lang.Assert;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post {
 
     @Id
@@ -37,12 +38,15 @@ public class Post {
 
     @Builder
     public Post(String title, String content, String videoId, Member member) {
+        Assert.hasText(title, "title must not be null");
+        Assert.hasText(content, "content must not be null");
+        Assert.hasText(videoId, "videoId must not be null");
+        Assert.notNull(member, "member must not be null");
+
         this.title = title;
         this.content = content;
         this.videoId = videoId;
-        if (member != null) {
-            changeMember(member);
-        }
+        changeMember(member);
     }
 
     public PostEditor.PostEditorBuilder toEditorBuilder() {

@@ -7,6 +7,7 @@ import com.tftad.request.Signup;
 import com.tftad.service.AuthService;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -29,7 +30,7 @@ public class AuthController {
     private final AuthProperty authProperty;
 
     @PostMapping("/auth/login")
-    public ResponseEntity<Object> login(@RequestBody Login login) {
+    public ResponseEntity<Object> login(@RequestBody @Valid Login login) {
         Long memberId = authService.login(login);
 
         JwtBuilder builder = Jwts.builder()
@@ -48,7 +49,7 @@ public class AuthController {
     }
 
     @PostMapping("/auth/signup")
-    public Long signup(@RequestBody Signup signup) {
+    public Long signup(@RequestBody @Valid Signup signup) {
         return authService.signup(signup);
     }
 

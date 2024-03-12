@@ -1,11 +1,12 @@
 package com.tftad.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.tftad.config.property.ExtractorProperty;
+import com.tftad.config.property.Urls;
 import com.tftad.domain.Post;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.request.external.Analysis;
 import com.tftad.response.PositionOfPostResponse;
+import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +18,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class ExtractorServiceImpl implements ExtractorService {
 
-    private final ExtractorProperty extractorProperty;
+    private final Urls urls;
 
     @Override
     public PositionOfPostResponse getPosition(Post post) {
+        Assert.notNull(post, "post must not be null");
         if (post.getPublished()) {
             return PositionOfPostResponse.builder()
                     .published(true)
@@ -50,7 +52,7 @@ public class ExtractorServiceImpl implements ExtractorService {
 
         WebClient client = WebClient.create();
         boolean ok = client.post()
-                .uri(extractorProperty.getUrl() + "/analysis")
+                .uri(urls.getExtractorServer() + "/analysis")
                 .bodyValue(analysis)
                 .retrieve()
                 .toBodilessEntity()
@@ -65,7 +67,7 @@ public class ExtractorServiceImpl implements ExtractorService {
     private ResponseEntity<JsonNode> queryPositionOnWorkingQueue(Post post) {
         WebClient client = WebClient.create();
 
-        String uri = UriComponentsBuilder.fromUriString(extractorProperty.getUrl() + "/position")
+        String uri = UriComponentsBuilder.fromUriString(urls.getExtractorServer() + "/position")
                 .queryParam("id", post.getId())
                 .build().toUriString();
 

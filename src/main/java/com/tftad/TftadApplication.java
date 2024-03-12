@@ -1,9 +1,9 @@
 package com.tftad;
 
 import com.tftad.config.property.AuthProperty;
-import com.tftad.config.property.ExtractorProperty;
 import com.tftad.config.property.GoogleOAuthProperty;
 import com.tftad.config.property.JwtProperty;
+import com.tftad.config.property.Urls;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties({
         JwtProperty.class,
         GoogleOAuthProperty.class,
-        ExtractorProperty.class,
+        Urls.class,
         AuthProperty.class
 })
 @SpringBootApplication

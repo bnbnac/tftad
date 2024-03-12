@@ -1,10 +1,9 @@
 package com.tftad.request;
 
+import com.tftad.domain.PostCreateDto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
-
-import static com.tftad.utility.Utility.extractVideoId;
 
 @Getter
 public class PostCreate {
@@ -18,8 +17,6 @@ public class PostCreate {
     @NotBlank(message = "유튜브 영상 url을 입력해주세요")
     private String videoUrl;
 
-    private String videoId;
-
     @Builder
     public PostCreate(String title, String content, String videoUrl) {
         this.title = title;
@@ -27,7 +24,9 @@ public class PostCreate {
         this.videoUrl = videoUrl;
     }
 
-    public void fillVideoIdFromVideoUrl() {
-        this.videoId = extractVideoId(videoUrl);
+    public PostCreateDto.PostCreateDtoBuilder toPostCreateDto() {
+        return PostCreateDto.builder()
+                .title(title)
+                .content(content);
     }
 }

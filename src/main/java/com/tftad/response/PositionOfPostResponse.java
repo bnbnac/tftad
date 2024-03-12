@@ -1,5 +1,6 @@
 package com.tftad.response;
 
+import io.jsonwebtoken.lang.Assert;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,6 +12,8 @@ public class PositionOfPostResponse {
 
     @Builder
     public PositionOfPostResponse(Integer initial, Integer current, boolean published) {
+        Assert.notNull(published, "publish must not be null");
+
         this.position = Position.builder()
                 .current(current)
                 .initial(initial)

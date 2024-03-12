@@ -1,5 +1,6 @@
 package com.tftad.domain;
 
+import io.jsonwebtoken.lang.Assert;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,17 +21,19 @@ public class Channel {
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
 
-    private String title;
+    private String channelTitle;
 
     private String youtubeChannelId;
 
     @Builder
-    public Channel(String title, String youtubeChannelId, Member member) {
-        this.title = title;
+    public Channel(String channelTitle, String youtubeChannelId, Member member) {
+        Assert.hasText(channelTitle, "channelTitle must not be null");
+        Assert.hasText(youtubeChannelId, "youtubeChannelId must not be null");
+        Assert.notNull(member, "member must not be null");
+
+        this.channelTitle = channelTitle;
         this.youtubeChannelId = youtubeChannelId;
-        if (member != null) {
-            changeMember(member);
-        }
+        changeMember(member);
     }
 
     private void changeMember(Member member) {

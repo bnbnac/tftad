@@ -10,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -20,8 +18,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public Long login(Login login) {
-        Member member = memberRepository.findByEmail(login.getEmail())
-                .orElseThrow(InvalidLoginInformation::new);
+        Member member = memberRepository.findByEmail(login.getEmail()).orElseThrow(InvalidLoginInformation::new);
 
         if (!passwordEncoder.matches(login.getPassword(), member.getPassword())) {
             throw new InvalidLoginInformation();
@@ -31,10 +28,10 @@ public class AuthService {
     }
 
     public Long signup(Signup signup) {
-        Optional<Member> memberOptional = memberRepository.findByEmail(signup.getEmail());
-        if (memberOptional.isPresent()) {
-            throw new InvalidRequest("email", "이미 가입된 이메일입니다");
-        }
+        memberRepository.findByEmail(signup.getEmail())
+                .ifPresent(m -> {
+                    throw new InvalidRequest("email", "이미 가입된 이메일입니다");
+                });
 
         String encodedPassword = passwordEncoder.encode(signup.getPassword());
 

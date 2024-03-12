@@ -2,8 +2,15 @@
 
 ---
 
+## response NPE 처리!!!!
+
+- unpub post edit transaction. edit중에 extractor가 껴들면어캄?
 - req res 클래스 validation, weblient npe (oauth, extractor)
-- builder private으로 강제
+- 짜바리 crud - channel, question,
+- 리스트조회: 일반조회 unpublish 개수만큼 더 퍼와야하는데 이거처리메소드?
+- 본인수정 & 본인삭제 : extractor가 껴들면?
+- post RUD 테스트 다시보기
+- validateExtractorResultOrDeletePost 는 repo코드가 있으니까 방어를 해야한다?
 
 ---
 
@@ -23,3 +30,8 @@
 - oauth 관련객체도 추상화할필요가 있음. api 문서좀 읽고 v3impl 이런식으로
 - postservice.validatePostInExtractorCompletion returns enum
 - 로그인이 필요한 api 테스트에서 mock login
+- business적 validation:
+- POST /posts 여러 서비스들의 트랜잭션에 대해: 트랜잭션 전파 공부, 혹은 새로운 하위 서비스를 만들어 그 여러 서비스를 주입받는다?
+- 지금 post title에만 길이 제한이 있는데 이거외에도 할거 많지 않나
+- validateExtractorResultOrDeletePost UX 고려
+- validateChannelOwner 성능테스트 -> 멤버에서 한번 걸러서 찾는거랑ㅇ비교

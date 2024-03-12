@@ -1,5 +1,6 @@
 package com.tftad.domain;
 
+import io.jsonwebtoken.lang.Assert;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,11 +29,13 @@ public class Question {
 
     @Builder
     public Question(String startTime, String endTime, Post post) {
+        Assert.hasText(startTime, "startTime must not be null");
+        Assert.hasText(endTime, "endTime must not be null");
+        Assert.notNull(post, "post must not be null");
+
         this.startTime = startTime;
         this.endTime = endTime;
-        if (post != null) {
-            changePost(post);
-        }
+        changePost(post);
     }
 
     private void changePost(Post post) {
@@ -43,8 +46,7 @@ public class Question {
         post.getQuestions().add(this);
     }
 
-    public String generateQuestionUrl() {
-        String prefix = "http://192.168.1.7:54321/questions/";
-        return prefix + startTime + "_" + endTime;
+    public String generateFilename() {
+        return startTime + "_" + endTime + ".mp4";
     }
 }
