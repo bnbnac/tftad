@@ -2,6 +2,7 @@ package com.tftad.controller;
 
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.PostCreateDto;
+import com.tftad.domain.PostEditDto;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
@@ -26,7 +27,6 @@ public class PostController {
     private final OAuthService oAuthService;
     private final ChannelService channelService;
     private final ExtractorService extractorService;
-    private final MemberService memberService;
 
     @PostMapping("/posts")
     public Long post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
@@ -43,11 +43,10 @@ public class PostController {
     }
 
     private PostCreateDto createPostCreateDto(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
-        Long memberId = memberService.getMemberById(authenticatedMember.getId()).getId();
         String videoId = extractVideoId(postCreate.getVideoUrl());
 
         return postCreate.toPostCreateDtoBuilder()
-                .memberId(memberId)
+                .memberId(authenticatedMember.getId())
                 .videoId(videoId)
                 .build();
     }
@@ -72,8 +71,16 @@ public class PostController {
     }
 
     @PatchMapping("/posts/{postId}")
-    public PostResponse edit(@PathVariable Long postId, @RequestBody PostEdit postEdit) {
-        return postService.edit(postId, postEdit);
+    public PostResponse edit(
+            AuthenticatedMember authenticatedMember,
+            @PathVariable Long postId,
+            @RequestBody PostEdit postEdit
+    ) {
+        PostEditDto postEditDto = postEdit.toPostEditDtoBuilder()
+                .memberId(authenticatedMember.getId())
+                .postId(postId)
+                .build();
+        return postService.edit(postEditDto);
     }
 
     @DeleteMapping("/posts/{postId}")

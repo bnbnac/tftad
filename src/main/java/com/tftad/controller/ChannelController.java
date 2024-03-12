@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.OAuthedMember;
 import com.tftad.domain.ChannelCreateDto;
 import com.tftad.service.ChannelService;
-import com.tftad.service.MemberService;
 import com.tftad.service.OAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,15 +15,13 @@ public class ChannelController {
 
     private final ChannelService channelService;
     private final OAuthService oAuthService;
-    private final MemberService memberService;
 
     @PostMapping("/oauth/add/channel")
     public Long addChannel(OAuthedMember oAuthedMember) {
-        Long memberId = memberService.getMemberById(oAuthedMember.getId()).getId();
         String accessToken = oAuthService.queryAccessToken(oAuthedMember.getAuthorizationCode());
         JsonNode channelResource = oAuthService.queryChannelResource(accessToken);
 
-        ChannelCreateDto channelCreateDto = createChannelCreateDto(memberId, channelResource);
+        ChannelCreateDto channelCreateDto = createChannelCreateDto(oAuthedMember.getId(), channelResource);
         channelService.validateAddedChannel(channelCreateDto.getYoutubeChannelId());
         return channelService.saveChannel(channelCreateDto);
     }
