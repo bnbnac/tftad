@@ -1,11 +1,10 @@
 package com.tftad.service;
 
-import com.tftad.domain.Post;
 import com.tftad.response.PositionOfPostResponse;
 
 public interface ExtractorService {
 
-    PositionOfPostResponse getPosition(Post post);
+    PositionOfPostResponse getPosition(Long postId);
 
     void queryAnalysis(String videoId, Long postId);
 

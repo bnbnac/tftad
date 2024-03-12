@@ -44,6 +44,7 @@ class ChannelServiceTest {
     @BeforeEach
     void clean() {
         channelRepository.deleteAll();
+        memberRepository.deleteAll();
     }
 
     @Test
@@ -108,7 +109,7 @@ class ChannelServiceTest {
         channelRepository.save(channel);
 
         // when then
-        assertDoesNotThrow(() -> channelService.validateChannelOwner(member, "channelId"));
+        assertDoesNotThrow(() -> channelService.validateChannelOwner(member.getId(), "channelId"));
     }
 
     @Test
@@ -130,7 +131,7 @@ class ChannelServiceTest {
 
         // when then
         assertThrows(ChannelNotFound.class, () -> {
-            channelService.validateChannelOwner(member, "channelId" + "other");
+            channelService.validateChannelOwner(member.getId(), "channelId" + "other");
         });
     }
 
@@ -159,7 +160,7 @@ class ChannelServiceTest {
 
         // when then
         assertThrows(InvalidRequest.class, () -> {
-            channelService.validateChannelOwner(otherMember, "channelId");
+            channelService.validateChannelOwner(otherMember.getId(), "channelId");
         });
     }
 
@@ -172,10 +173,10 @@ class ChannelServiceTest {
                 .password("pswd")
                 .name("name")
                 .build();
-        memberRepository.save(member);
+        Long memberId = memberRepository.save(member).getId();
 
         ChannelCreateDto channelCreateDto = ChannelCreateDto.builder()
-                .member(member)
+                .memberId(memberId)
                 .channelTitle("title")
                 .youtubeChannelId("cid")
                 .build();

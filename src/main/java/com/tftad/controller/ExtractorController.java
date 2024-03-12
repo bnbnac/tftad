@@ -1,7 +1,6 @@
 package com.tftad.controller;
 
 import com.tftad.config.data.AuthenticatedMember;
-import com.tftad.domain.Post;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.request.ExtractorCompletion;
@@ -30,10 +29,10 @@ public class ExtractorController {
         List<String> extractorResult = extractorCompletion.getResult();
 
         try {
-            Post post = postService.validatePublishedPost(postId);
+            postService.validatePublishedPost(postId);
             postService.validateExtractorResultOrDeletePost(postId, extractorResult);
-            questionService.saveQuestionsFromExtractorResult(post, extractorResult);
-            postService.showPost(post);
+            questionService.saveQuestionsFromExtractorResult(postId, extractorResult);
+            postService.showPost(postId);
             return ResponseEntity.ok("question data saved. post id: " + postId);
         } catch (InvalidRequest e) {
             return ResponseEntity.badRequest().body(e.getMessage() + " post id: " + postId);
@@ -44,7 +43,7 @@ public class ExtractorController {
 
     @GetMapping("/extractor/position/{postId}")
     public PositionOfPostResponse getPosition(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
-        Post post = postService.validateToGetPosition(authenticatedMember.getId(), postId);
-        return extractorService.getPosition(post);
+        postService.validateToGetPosition(authenticatedMember.getId(), postId);
+        return extractorService.getPosition(postId);
     }
 }

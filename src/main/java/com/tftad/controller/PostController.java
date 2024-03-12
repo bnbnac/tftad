@@ -1,7 +1,6 @@
 package com.tftad.controller;
 
 import com.tftad.config.data.AuthenticatedMember;
-import com.tftad.domain.Member;
 import com.tftad.domain.PostCreateDto;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.request.PostCreate;
@@ -34,7 +33,8 @@ public class PostController {
         PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember, postCreate);
 
         String youtubeChannelId = oAuthService.queryVideoResourceToGetChannelId(postCreateDto.getVideoId());
-        channelService.validateChannelOwner(postCreateDto.getMember(), youtubeChannelId);
+        channelService.validateChannelOwner(postCreateDto.getMemberId(), youtubeChannelId);
+
         postService.validatePostedVideo(postCreateDto);
         Long postId = postService.savePost(postCreateDto);
 
@@ -43,11 +43,11 @@ public class PostController {
     }
 
     private PostCreateDto createPostCreateDto(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
-        Member member = memberService.getMemberById(authenticatedMember.getId());
+        Long memberId = memberService.getMemberById(authenticatedMember.getId()).getId();
         String videoId = extractVideoId(postCreate.getVideoUrl());
 
-        return postCreate.toPostCreateDto()
-                .member(member)
+        return postCreate.toPostCreateDtoBuilder()
+                .memberId(memberId)
                 .videoId(videoId)
                 .build();
     }

@@ -1,6 +1,7 @@
 package com.tftad.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,7 +11,7 @@ import java.util.List;
 @Builder
 public class ExtractorCompletion {
 
-    @NotBlank(message = "postId required")
+    @NotNull(message = "postId required")
     private Long postId;
 
     @NotBlank(message = "fill the process_video() result")

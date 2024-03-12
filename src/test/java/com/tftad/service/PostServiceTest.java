@@ -31,6 +31,9 @@ class PostServiceTest {
     private PostService postService;
 
     @Autowired
+    private MemberService memberService;
+
+    @Autowired
     private PostRepository postRepository;
 
     @Autowired
@@ -39,6 +42,7 @@ class PostServiceTest {
     @BeforeEach
     void clean() {
         postRepository.deleteAll();
+        memberRepository.deleteAll();
     }
 
     Member generateMember(String name, String password, String email) {
@@ -66,13 +70,13 @@ class PostServiceTest {
                 .password("pswd")
                 .name("name")
                 .build();
-        memberRepository.save(member);
+        Long id = memberRepository.save(member).getId();
 
         PostCreateDto postCreateDto = PostCreateDto.builder()
                 .title("제목")
                 .content("내용")
                 .videoId("videoId")
-                .member(member)
+                .memberId(id)
                 .build();
 
         // when
@@ -287,18 +291,17 @@ class PostServiceTest {
                 .videoId("videoId1")
                 .member(member)
                 .build();
-
         Post post2 = Post.builder()
                 .title("제목2")
                 .content("내용2")
                 .videoId("videoId2")
                 .member(member)
                 .build();
-
-        // when
-        postService.showPost(post1);
         postRepository.save(post1);
         postRepository.save(post2);
+
+        // when
+        postService.showPost(post1.getId());
 
         Iterator<Post> iterator = postRepository.findAll().iterator();
         Post foundPost1 = iterator.next();
@@ -325,9 +328,10 @@ class PostServiceTest {
                 .videoId("videoId")
                 .member(member)
                 .build();
+        postRepository.save(post);
 
         // when
-        postService.showPost(post);
+        postService.showPost(post.getId());
 
         // then
         assertThrows(InvalidRequest.class, () -> {
@@ -400,11 +404,12 @@ class PostServiceTest {
                 .videoId("videoId")
                 .member(member)
                 .build();
-        postService.showPost(post);
+        postRepository.save(post);
+        postService.showPost(post.getId());
 
         PostCreateDto postCreateDto = PostCreateDto.builder()
                 .videoId(post.getVideoId() + "other")
-                .member(post.getMember())
+                .memberId(post.getMember().getId())
                 .content(post.getContent())
                 .title(post.getTitle())
                 .build();
@@ -433,7 +438,7 @@ class PostServiceTest {
 
         PostCreateDto postCreateDto = PostCreateDto.builder()
                 .videoId(post.getVideoId())
-                .member(post.getMember())
+                .memberId(post.getMember().getId())
                 .content(post.getContent())
                 .title(post.getTitle())
                 .build();

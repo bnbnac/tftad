@@ -6,7 +6,6 @@ import com.tftad.domain.Post;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.request.external.Analysis;
 import com.tftad.response.PositionOfPostResponse;
-import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +18,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ExtractorServiceImpl implements ExtractorService {
 
     private final Urls urls;
+    private final PostService postService;
 
     @Override
-    public PositionOfPostResponse getPosition(Post post) {
-        Assert.notNull(post, "post must not be null");
+    public PositionOfPostResponse getPosition(Long postId) {
+        Post post = postService.getPostById(postId);
+
         if (post.getPublished()) {
             return PositionOfPostResponse.builder()
                     .published(true)

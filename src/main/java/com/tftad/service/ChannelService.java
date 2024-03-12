@@ -8,12 +8,14 @@ import com.tftad.exception.InvalidRequest;
 import com.tftad.repository.ChannelRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class ChannelService {
 
     private final ChannelRepository channelRepository;
+    private final MemberService memberService;
 
     public void validateAddedChannel(String youtubeChannelId) {
         channelRepository.findByYoutubeChannelId(youtubeChannelId)
@@ -24,19 +26,22 @@ public class ChannelService {
                 });
     }
 
-    public void validateChannelOwner(Member member, String youtubeChannelId) {
+    public void validateChannelOwner(Long memberId, String youtubeChannelId) {
         Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
 
-        if (!member.getId().equals(channel.getMember().getId())) {
+        if (!memberId.equals(channel.getMember().getId())) {
             throw new InvalidRequest("url", "계정에 유튜브 채널을 등록해주세요");
         }
     }
 
+    @Transactional
     public Long saveChannel(ChannelCreateDto channelCreateDto) {
+        Member member = memberService.getMemberById(channelCreateDto.getMemberId());
+
         Channel channel = Channel.builder()
                 .youtubeChannelId(channelCreateDto.getYoutubeChannelId())
                 .channelTitle(channelCreateDto.getChannelTitle())
-                .member(channelCreateDto.getMember())
+                .member(member)
                 .build();
         return channelRepository.save(channel).getId();
     }

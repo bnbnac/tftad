@@ -6,6 +6,7 @@ import com.tftad.domain.Question;
 import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.repository.QuestionRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,13 @@ class QuestionServiceTest {
     @Autowired
     PostRepository postRepository;
 
+    @BeforeEach
+    void clean() {
+        questionRepository.deleteAll();
+        postRepository.deleteAll();
+        memberRepository.deleteAll();
+    }
+
     @Test
     @DisplayName("questions 저장")
     void test1() {
@@ -48,12 +56,12 @@ class QuestionServiceTest {
                 .member(member)
                 .content("content")
                 .build();
-        postRepository.save(post);
+        Long postId = postRepository.save(post).getId();
 
         List<String> extractorResult = Arrays.asList("start1", "end1", "start2", "end2");
 
         // when
-        questionService.saveQuestionsFromExtractorResult(post, extractorResult);
+        questionService.saveQuestionsFromExtractorResult(postId, extractorResult);
 
         Iterator<Question> iterator = questionRepository.findAll().iterator();
         Question q1 = iterator.next();

@@ -6,6 +6,7 @@ import com.tftad.repository.QuestionRepository;
 import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,10 +15,12 @@ import java.util.List;
 public class QuestionService {
 
     private final QuestionRepository questionRepository;
+    private final PostService postService;
 
-    public void saveQuestionsFromExtractorResult(Post post, List<String> extractorResult) {
-        Assert.notNull(post, "post must not be null");
+    @Transactional
+    public void saveQuestionsFromExtractorResult(Long postId, List<String> extractorResult) {
         Assert.notNull(extractorResult, "extractor result must not be null");
+        Post post = postService.getPostById(postId);
 
         for (int i = 0; i < extractorResult.size(); i += 2) {
             Question question = Question.builder()

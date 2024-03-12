@@ -1,12 +1,12 @@
 package com.tftad.service;
 
+import com.tftad.domain.Member;
 import com.tftad.domain.Post;
 import com.tftad.domain.PostCreateDto;
 import com.tftad.domain.PostEditor;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.PostNotFound;
-import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
@@ -26,14 +26,17 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final MemberRepository memberRepository;
+    private final MemberService memberService;
 
+    @Transactional
     public Long savePost(PostCreateDto postCreateDto) {
+        Member member = memberService.getMemberById(postCreateDto.getMemberId());
+
         Post post = Post.builder()
                 .title(postCreateDto.getTitle())
                 .content(postCreateDto.getContent())
                 .videoId(postCreateDto.getVideoId())
-                .member(postCreateDto.getMember())
+                .member(member)
                 .build();
         return postRepository.save(post).getId();
     }
@@ -51,8 +54,8 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse edit(Long id, PostEdit postEdit) {
-        Post post = postRepository.findById(id).orElseThrow(PostNotFound::new);
+    public PostResponse edit(Long postId, PostEdit postEdit) {
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
 
         PostEditor postEditor = post.toEditorBuilder()
                 .title(postEdit.getTitle())
@@ -70,17 +73,16 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    public Post validatePublishedPost(Long postId) {
+    public void validatePublishedPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new InvalidRequest("postId", "존재하지 않는 게시글입니다"));
         if (post.getPublished()) {
             throw new InvalidRequest("postId", "이미 발행된 게시글입니다");
         }
-        return post;
     }
 
-    public void showPost(Post post) {
-        Assert.notNull(post, "post must not be null");
+    public void showPost(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
         post.show();
         postRepository.save(post);
     }
@@ -94,12 +96,11 @@ public class PostService {
                 });
     }
 
-    public Post validateToGetPosition(Long memberId, Long postId) {
+    public void validateToGetPosition(Long memberId, Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
         if (!post.getMember().getId().equals(memberId)) {
             throw new InvalidRequest("postId", "게시글의 작성자만 작업상황을 조회할 수 있습니다");
         }
-        return post;
     }
 
     public void validateExtractorResultOrDeletePost(Long postId, List<String> extractorResult) {
@@ -110,5 +111,9 @@ public class PostService {
             delete(postId);
             throw new ExtractorServerError();
         }
+    }
+
+    public Post getPostById(Long postId) {
+        return postRepository.findById(postId).orElseThrow(PostNotFound::new);
     }
 }

@@ -24,7 +24,7 @@ public class PostCreate {
         this.videoUrl = videoUrl;
     }
 
-    public PostCreateDto.PostCreateDtoBuilder toPostCreateDto() {
+    public PostCreateDto.PostCreateDtoBuilder toPostCreateDtoBuilder() {
         return PostCreateDto.builder()
                 .title(title)
                 .content(content);
