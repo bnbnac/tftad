@@ -3,12 +3,12 @@ package com.tftad.service;
 import com.tftad.domain.Member;
 import com.tftad.domain.Post;
 import com.tftad.domain.PostCreateDto;
+import com.tftad.domain.PostEditDto;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.PostNotFound;
 import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
-import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -153,19 +153,30 @@ class PostServiceTest {
     @Test
     @DisplayName("글 제목만 수정")
     void test4() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member).getId();
+
         Post post = Post.builder()
                 .title("제목")
                 .content("내용")
+                .videoId("videoId")
+                .member(member)
                 .build();
-        postRepository.save(post);
+        Long postId = postRepository.save(post).getId();
 
-        PostEdit postEdit = PostEdit.builder()
+        PostEditDto postEditDto = PostEditDto.builder()
                 .title("수정제목")
                 .content(null)
+                .postId(postId)
+                .memberId(memberId)
                 .build();
 
         // when
-        postService.edit(post.getId(), postEdit);
+        postService.edit(postEditDto);
         Post changedPost = postRepository.findById(post.getId())
                 .orElseThrow(() -> new RuntimeException("글이 존재하지 않습니다. id=" + post.getId()));
 
@@ -177,19 +188,30 @@ class PostServiceTest {
     @Test
     @DisplayName("글 내용 수정")
     void test5() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member).getId();
+
         Post post = Post.builder()
                 .title("제목")
                 .content("내용")
+                .videoId("videoId")
+                .member(member)
                 .build();
-        postRepository.save(post);
+        Long postId = postRepository.save(post).getId();
 
-        PostEdit postEdit = PostEdit.builder()
+        PostEditDto postEditDto = PostEditDto.builder()
                 .title(null)
                 .content("수정내용")
+                .postId(postId)
+                .memberId(memberId)
                 .build();
 
         // when
-        postService.edit(post.getId(), postEdit);
+        postService.edit(postEditDto);
         Post changedPost = postRepository.findById(post.getId())
                 .orElseThrow(() -> new RuntimeException("글이 존재하지 않습니다. id=" + post.getId()));
 
@@ -202,9 +224,18 @@ class PostServiceTest {
     @Test
     @DisplayName("글 삭제")
     void test6() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(member);
+
         Post post = Post.builder()
                 .title("제목")
                 .content("내용")
+                .videoId("videoId")
+                .member(member)
                 .build();
         postRepository.save(post);
 
@@ -242,30 +273,83 @@ class PostServiceTest {
 
     @Test
     @DisplayName("글 내용 수정 - 존재하지 않는 글")
-    void test8() {
+    void test8_1() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member).getId();
+
         Post post = Post.builder()
                 .title("제목")
                 .content("내용")
+                .videoId("videoId")
+                .member(member)
                 .build();
-        postRepository.save(post);
+        Long postId = postRepository.save(post).getId();
 
-        PostEdit postEdit = PostEdit.builder()
-                .title(null)
-                .content("수정내용")
-                .build();
+        // when
+        PostEditDto postEditDto = PostEditDto.builder()
+                .postId(postId + 1).memberId(memberId).content("c").title("t").build();
 
-        // when then
+        // then
         assertThrows(PostNotFound.class, () -> {
-            postService.edit(post.getId() + 1L, postEdit);
+            postService.edit(postEditDto);
+        });
+    }
+
+
+    @Test
+    @DisplayName("글 내용 수정 - 작성자가 아닌 멤버")
+    void test8_2() {
+        Member member1 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId1 = memberRepository.save(member1).getId();
+
+        Member member2 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId2 = memberRepository.save(member2).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member1)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        // when
+        PostEditDto postEditDto = PostEditDto.builder()
+                .postId(postId).memberId(memberId2).content("c").title("t").build();
+
+        // then
+        assertThrows(InvalidRequest.class, () -> {
+            postService.edit(postEditDto);
         });
     }
 
     @Test
     @DisplayName("글 삭제 - 존재하지 않는 글")
     void test9() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(member);
+
         Post post = Post.builder()
                 .title("제목")
                 .content("내용")
+                .videoId("videoId")
+                .member(member)
                 .build();
         postRepository.save(post);
 
