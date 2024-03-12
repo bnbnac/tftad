@@ -1,18 +1,21 @@
 package com.tftad.service;
 
-import com.tftad.domain.Member;
 import com.tftad.domain.Post;
+import com.tftad.domain.PostCreateDto;
 import com.tftad.domain.PostEditor;
+import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.PostNotFound;
+import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
-import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
+import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,13 +26,14 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final MemberRepository memberRepository;
 
-    public Long savePost(Member member, PostCreate postCreate) {
+    public Long savePost(PostCreateDto postCreateDto) {
         Post post = Post.builder()
-                .title(postCreate.getTitle())
-                .content(postCreate.getContent())
-                .videoId(postCreate.getVideoId())
-                .member(member)
+                .title(postCreateDto.getTitle())
+                .content(postCreateDto.getContent())
+                .videoId(postCreateDto.getVideoId())
+                .member(postCreateDto.getMember())
                 .build();
         return postRepository.save(post).getId();
     }
@@ -90,9 +94,9 @@ public class PostService {
                 });
     }
 
-    public Post validatePostBeforeGetPosition(Long memberId, Long postId) {
+    public Post validateToGetPosition(Long memberId, Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
-        if (!memberId.equals(post.getMember().getId())) {
+        if (!post.getMember().getId().equals(memberId)) {
             throw new InvalidRequest("postId", "게시글의 작성자만 작업상황을 조회할 수 있습니다");
         }
         return post;
