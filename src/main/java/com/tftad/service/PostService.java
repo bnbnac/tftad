@@ -1,14 +1,10 @@
 package com.tftad.service;
 
-import com.tftad.domain.Member;
-import com.tftad.domain.Post;
-import com.tftad.domain.PostCreateDto;
-import com.tftad.domain.PostEditor;
+import com.tftad.domain.*;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.PostNotFound;
 import com.tftad.repository.PostRepository;
-import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
 import io.jsonwebtoken.lang.Assert;
@@ -54,12 +50,17 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse edit(Long postId, PostEdit postEdit) {
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
+    public PostResponse edit(PostEditDto postEditDto) {
+        memberService.getMemberById(postEditDto.getMemberId());
+
+        Post post = postRepository.findById(postEditDto.getPostId()).orElseThrow(PostNotFound::new);
+        if (!postEditDto.getMemberId().equals(post.getMember().getId())) {
+            throw new InvalidRequest("memberId", "소유자만 게시글을 수정할 수 있습니다");
+        }
 
         PostEditor postEditor = post.toEditorBuilder()
-                .title(postEdit.getTitle())
-                .content(postEdit.getContent())
+                .title(postEditDto.getTitle())
+                .content(postEditDto.getContent())
                 .build();
         post.edit(postEditor);
         postRepository.save(post);
@@ -67,7 +68,7 @@ public class PostService {
         return new PostResponse(post);
     }
 
-    @Transactional
+    @Transactional // showPost가 필요한가? published가 필요한가?
     public void delete(Long id) {
         Post post = postRepository.findById(id).orElseThrow(PostNotFound::new);
         postRepository.delete(post);
