@@ -30,7 +30,9 @@ public class ChannelService {
         Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
 
         if (!memberId.equals(channel.getMember().getId())) {
-            throw new InvalidRequest("url", "계정에 유튜브 채널을 등록해주세요");
+            throw new InvalidRequest(
+                    "youtubeChannelId", "계정에 유튜브 채널을 등록해주세요. channelId: " + youtubeChannelId
+            );
         }
     }
 
