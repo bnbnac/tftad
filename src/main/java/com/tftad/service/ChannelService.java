@@ -1,8 +1,7 @@
 package com.tftad.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.domain.Channel;
-import com.tftad.domain.ChannelData;
+import com.tftad.domain.ChannelCreateDto;
 import com.tftad.domain.Member;
 import com.tftad.exception.ChannelNotFound;
 import com.tftad.exception.InvalidRequest;
@@ -16,17 +15,6 @@ public class ChannelService {
 
     private final ChannelRepository channelRepository;
 
-    public ChannelData generateChannelData(JsonNode channelResource) {
-        JsonNode channelItem = channelResource.get("items").get(0);
-        String youtubeChannelId = channelItem.get("id").asText();
-        String channelTitle = channelItem.get("snippet").get("title").asText();
-
-        return ChannelData.builder()
-                .title(channelTitle)
-                .youtubeChannelId(youtubeChannelId)
-                .build();
-    }
-
     public void validateAddedChannel(String youtubeChannelId) {
         channelRepository.findByYoutubeChannelId(youtubeChannelId)
                 .ifPresent(c -> {
@@ -37,19 +25,18 @@ public class ChannelService {
     }
 
     public void validateChannelOwner(Member member, String youtubeChannelId) {
-        Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId)
-                .orElseThrow(ChannelNotFound::new);
+        Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
 
         if (!member.getId().equals(channel.getMember().getId())) {
             throw new InvalidRequest("url", "계정에 유튜브 채널을 등록해주세요");
         }
     }
 
-    public Long saveChannel(Member member, ChannelData channelData) {
+    public Long saveChannel(ChannelCreateDto channelCreateDto) {
         Channel channel = Channel.builder()
-                .youtubeChannelId(channelData.getYoutubeChannelId())
-                .title(channelData.getTitle())
-                .member(member)
+                .youtubeChannelId(channelCreateDto.getYoutubeChannelId())
+                .channelTitle(channelCreateDto.getChannelTitle())
+                .member(channelCreateDto.getMember())
                 .build();
         return channelRepository.save(channel).getId();
     }

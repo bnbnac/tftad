@@ -15,9 +15,7 @@ public class OAuthService {
 
     private final GoogleOAuthProperty googleOAuthProperty;
 
-    public JsonNode queryChannelResource(String code) {
-        String accessToken = queryAccessToken(code);
-
+    public JsonNode queryChannelResource(String accessToken) {
         WebClient client = WebClient.create();
 
         String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getYoutubeResourceUrl() + "/channels")
@@ -34,7 +32,7 @@ public class OAuthService {
                 .getBody();
     }
 
-    private String queryAccessToken(String code) {
+    public String queryAccessToken(String code) {
         WebClient client = WebClient.create();
 
         return client.post()
