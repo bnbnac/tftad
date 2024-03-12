@@ -76,8 +76,8 @@ class PostControllerTest {
         String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/posts")
-                        .contentType(APPLICATION_JSON)
-                        .content(json)
+                                .contentType(APPLICATION_JSON)
+                                .content(json)
                         //.cookie() empty cookie
                 )
                 .andExpect(status().isUnauthorized());

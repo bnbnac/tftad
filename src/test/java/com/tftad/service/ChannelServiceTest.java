@@ -3,46 +3,34 @@ package com.tftad.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tftad.config.data.OAuthedMember;
-import com.tftad.domain.Channel;
-import com.tftad.domain.Member;
+import com.tftad.domain.*;
+import com.tftad.exception.ChannelNotFound;
 import com.tftad.exception.InvalidRequest;
-import com.tftad.exception.MemberNotFound;
 import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
-
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class ChannelServiceTest {
-    @Mock
+    @Autowired
     private ChannelRepository channelRepository;
 
-    @Mock
+    @Autowired
     private MemberRepository memberRepository;
 
-    @Mock
+    @Autowired
     private OAuthService oAuthService;
 
-    @InjectMocks
+    @Autowired
     private ChannelService channelService;
-
-    private OAuthedMember oAuthedMember = OAuthedMember
-            .builder()
-            .id(1L)
-            .authorizationCode("code")
-            .build();
-    private Member member = Member.builder().build();
 
     static private JsonNode channelResource;
 
@@ -53,40 +41,152 @@ class ChannelServiceTest {
         channelResource = objectMapper.readTree(jsonStr);
     }
 
-    @Test
-    @DisplayName("멤버에 채널을 추가한다")
-    void test1() throws JsonProcessingException {
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
-
-        when(oAuthService.queryChannelResource("code")).thenReturn(channelResource);
-
-        when(channelRepository.findByYoutubeChannelId(any())).thenReturn(Optional.empty());
-        when(channelRepository.save(any(Channel.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        channelService.addChannel(oAuthedMember);
-        verify(channelRepository, times(1)).save(any(Channel.class));
+    @BeforeEach
+    void clean() {
+        channelRepository.deleteAll();
     }
 
     @Test
-    @DisplayName("존재하지 않는 멤버에 채널을 추가할 수 없다")
+    @DisplayName("validateAddedChannel 테스트: 등록된 채널")
+    void test1() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(member);
+
+        Channel channel = Channel.builder()
+                .youtubeChannelId("channelId")
+                .channelTitle("title")
+                .member(member)
+                .build();
+        channelRepository.save(channel);
+
+        // when then
+        assertThrows(InvalidRequest.class, () -> {
+            channelService.validateAddedChannel("channelId");
+        });
+    }
+
+    @Test
+    @DisplayName("validateAddedChannel 테스트: 새로운 채널")
     void test2() {
-        when(memberRepository.findById(1L)).thenReturn(Optional.empty());
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(member);
 
-        assertThrows(MemberNotFound.class, () -> channelService.addChannel(oAuthedMember));
-        verify(channelRepository, never()).save(any(Channel.class));
+        Channel channel = Channel.builder()
+                .youtubeChannelId("channelId")
+                .channelTitle("title")
+                .member(member)
+                .build();
+        channelRepository.save(channel);
+
+        // when then
+        assertDoesNotThrow(() -> channelService.validateAddedChannel("channelId" + "other"));
     }
 
     @Test
-    @DisplayName("이미 등록된 채널은 등록할 수 없다")
-    void test3() throws JsonProcessingException {
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+    @DisplayName("validateChannelOwner 테스트: 소유자인 경우")
+    void test3() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(member);
 
-        when(oAuthService.queryChannelResource("code")).thenReturn(channelResource);
+        Channel channel = Channel.builder()
+                .youtubeChannelId("channelId")
+                .channelTitle("title")
+                .member(member)
+                .build();
+        channelRepository.save(channel);
 
-        when(channelRepository.findByYoutubeChannelId(eq("testId")))
-                .thenReturn(Optional.of(Channel.builder().build()));
+        // when then
+        assertDoesNotThrow(() -> channelService.validateChannelOwner(member, "channelId"));
+    }
 
-        assertThrows(InvalidRequest.class, () -> channelService.addChannel(oAuthedMember));
-        verify(channelRepository, never()).save(any(Channel.class));
+    @Test
+    @DisplayName("validateChannelOwner 테스트: 등록되지 않은 채널")
+    void test4() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(member);
+
+        Channel channel = Channel.builder()
+                .youtubeChannelId("channelId")
+                .channelTitle("title")
+                .member(member)
+                .build();
+        channelRepository.save(channel);
+
+        // when then
+        assertThrows(ChannelNotFound.class, () -> {
+            channelService.validateChannelOwner(member, "channelId" + "other");
+        });
+    }
+
+    @Test
+    @DisplayName("validateChannelOwner 테스트: 등록된 채널이지만 소유하지 않은 경우")
+    void test5() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(member);
+        Member otherMember = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(otherMember);
+
+        Channel channel = Channel.builder()
+                .youtubeChannelId("channelId")
+                .channelTitle("title")
+                .member(member)
+                .build();
+        channelRepository.save(channel);
+
+        // when then
+        assertThrows(InvalidRequest.class, () -> {
+            channelService.validateChannelOwner(otherMember, "channelId");
+        });
+    }
+
+
+    @Test
+    @DisplayName("channel 저장")
+    void test6() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        memberRepository.save(member);
+
+        ChannelCreateDto channelCreateDto = ChannelCreateDto.builder()
+                .member(member)
+                .channelTitle("title")
+                .youtubeChannelId("cid")
+                .build();
+
+        // when
+        channelService.saveChannel(channelCreateDto);
+
+        // then
+        assertEquals(1L, channelRepository.count());
+        Channel channel = channelRepository.findAll().iterator().next();
+        assertEquals("title", channel.getChannelTitle());
+        assertEquals("cid", channel.getYoutubeChannelId());
     }
 }
