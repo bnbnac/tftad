@@ -3,6 +3,7 @@ package com.tftad.service;
 import com.tftad.domain.Member;
 import com.tftad.domain.Post;
 import com.tftad.domain.Question;
+import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.repository.QuestionRepository;
@@ -31,12 +32,16 @@ class QuestionServiceTest {
     QuestionRepository questionRepository;
 
     @Autowired
+    ChannelRepository channelRepository;
+
+    @Autowired
     PostRepository postRepository;
 
     @BeforeEach
     void clean() {
         questionRepository.deleteAll();
         postRepository.deleteAll();
+        channelRepository.deleteAll();
         memberRepository.deleteAll();
     }
 

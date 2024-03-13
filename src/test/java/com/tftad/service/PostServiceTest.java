@@ -7,6 +7,7 @@ import com.tftad.domain.PostEditDto;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.PostNotFound;
+import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostSearch;
@@ -39,9 +40,13 @@ class PostServiceTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private ChannelRepository channelRepository;
+
     @BeforeEach
     void clean() {
         postRepository.deleteAll();
+        channelRepository.deleteAll();
         memberRepository.deleteAll();
     }
 
@@ -240,7 +245,7 @@ class PostServiceTest {
         postRepository.save(post);
 
         // when
-        postService.delete(post.getId());
+        postService.delete(member.getId(), post.getId());
 
 
         //then
@@ -355,7 +360,7 @@ class PostServiceTest {
 
         // when then
         assertThrows(PostNotFound.class, () -> {
-            postService.delete(post.getId() + 1L);
+            postService.delete(member.getId(), post.getId() + 1L);
         });
     }
 
