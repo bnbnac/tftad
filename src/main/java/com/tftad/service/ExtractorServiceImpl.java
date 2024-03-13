@@ -65,6 +65,21 @@ public class ExtractorServiceImpl implements ExtractorService {
         }
     }
 
+    @Override
+    public ResponseEntity<JsonNode> queryDelete(Long postId) {
+        WebClient client = WebClient.create();
+
+        String uri = UriComponentsBuilder.fromUriString(urls.getExtractorServer() + "/delete")
+                .queryParam("id", postId)
+                .build().toUriString();
+
+        return client.delete()
+                .uri(uri)
+                .retrieve()
+                .toEntity(JsonNode.class)
+                .block();
+    }
+
     private ResponseEntity<JsonNode> queryPositionOnWorkingQueue(Post post) {
         WebClient client = WebClient.create();
 
