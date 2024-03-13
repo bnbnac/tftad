@@ -1,5 +1,6 @@
 package com.tftad.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.PostCreateDto;
 import com.tftad.domain.PostEditDto;
@@ -12,6 +13,7 @@ import com.tftad.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,7 +40,7 @@ public class PostController {
         postService.validatePostedVideo(postCreateDto);
         Long postId = postService.savePost(postCreateDto);
 
-        queryToExtractor(postCreateDto.getVideoId(), postId);
+        queryToExtractor(postCreateDto.getVideoId(), postCreateDto.getMemberId(), postId);
         return postId;
     }
 
@@ -51,11 +53,11 @@ public class PostController {
                 .build();
     }
 
-    private void queryToExtractor(String videoId, Long postId) {
+    private void queryToExtractor(String videoId, Long memberId, Long postId) {
         try {
             extractorService.queryAnalysis(videoId, postId);
         } catch (Exception e) {
-            postService.delete(postId);
+            postService.delete(memberId, postId);
             throw new ExtractorServerError();
         }
     }
@@ -84,7 +86,8 @@ public class PostController {
     }
 
     @DeleteMapping("/posts/{postId}")
-    public void delete(@PathVariable Long postId) {
-        postService.delete(postId);
+    public ResponseEntity<JsonNode> delete(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
+        postService.delete(authenticatedMember.getId(), postId);
+        return extractorService.queryDelete(postId);
     }
 }

@@ -7,6 +7,10 @@
 - unpub post edit transaction. edit중에 extractor가 껴들면어캄?
 - req res 클래스 validation, weblient npe (oauth, extractor)
 - 리스트조회: 일반조회 unpublish 개수만큼 더 퍼와야하는데 이거처리메소드?
+- extractor cutting 후 downloads 삭제 
+- showPost가 필요한가? published가 필요한가?
+- 근데 getPosition은 postRepo를 계속 쓰는데 이걸로 구현하는게 맞나
+- downloads, cutter 찌꺼기 지우는작업, force quit 처리 끝내고 testmethod
 
 ---
 
@@ -27,3 +31,4 @@
 - 지금 post title에만 길이 제한이 있는데 이거외에도 할거 많지 않나
 - validateExtractorResultOrDeletePost UX 고려 - 바로 지워버리지 말고 언제언제 지워질거다 이런식으로
 - validateChannelOwner 성능테스트 -> 멤버에서 한번 걸러서 찾는거랑ㅇ비교
+- yt-dlp를 알아서 업데이트하는법?

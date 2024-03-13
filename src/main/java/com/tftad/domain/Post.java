@@ -33,7 +33,7 @@ public class Post {
     @Lob
     private String content;
 
-    @OneToMany(mappedBy = "post")
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Question> questions = new ArrayList<>();
 
     @Builder

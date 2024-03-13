@@ -68,9 +68,10 @@ public class PostService {
         return new PostResponse(post);
     }
 
-    @Transactional // showPost가 필요한가? published가 필요한가?
-    public void delete(Long id) {
-        Post post = postRepository.findById(id).orElseThrow(PostNotFound::new);
+    @Transactional
+    public void delete(Long memberId, Long postId) {
+        memberService.getMemberById(memberId);
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
         postRepository.delete(post);
     }
 
@@ -109,7 +110,7 @@ public class PostService {
         Assert.notNull(extractorResult, "extractor result must not be null");
 
         if (extractorResult.isEmpty() || extractorResult.size() % 2 == 1) {
-            delete(postId);
+            postRepository.deleteById(postId);
             throw new ExtractorServerError();
         }
     }
