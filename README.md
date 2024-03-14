@@ -13,6 +13,7 @@
 - 근데 getPosition은 postRepo를 계속 쓰는데 이걸로 구현하는게 맞나
 - downloads, cutter 찌꺼기 지우는작업, force quit 처리 끝내고 testmethod
 - post가 channel을 가지면 편한가
+- delete member, update member, update question
 
 ---
 
@@ -38,5 +39,6 @@
   - 예를 들어, IP 주소나 기기 정보를 토큰에 포함시켜 토큰을 사용하는 클라이언트의 신원을 확인할 수 있다.
   - 이를 통해 탈취된 토큰이 다른 기기나 IP 주소에서 사용되는 것을 방지할 수 있다.
 - comment 기능정도는 넣어줘야 rdb를 쓰는 보람이 있는거같다
+- 결국 세션db가 필요하다? logout deleteMember
 
  

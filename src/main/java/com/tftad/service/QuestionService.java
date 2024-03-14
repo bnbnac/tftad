@@ -2,9 +2,12 @@ package com.tftad.service;
 
 import com.tftad.domain.Post;
 import com.tftad.domain.Question;
+import com.tftad.domain.QuestionEditDto;
+import com.tftad.domain.QuestionEditor;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.QuestionNotFound;
 import com.tftad.repository.QuestionRepository;
+import com.tftad.response.QuestionResponse;
 import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -47,5 +50,22 @@ public class QuestionService {
 
     public Question getQuestionById(Long questionId) {
         return questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
+    }
+
+    @Transactional
+    public QuestionResponse edit(QuestionEditDto questionEditDto) {
+        Question question = questionRepository.findById(questionEditDto.getQuestionId())
+                .orElseThrow(QuestionNotFound::new);
+        if (!questionEditDto.getMemberId().equals(question.getPost().getMember().getId())) {
+            throw new InvalidRequest("memberId", "게시글 작성자만 문제를 수정할 수 있습니다");
+        }
+
+        QuestionEditor questionEditor = question.toEditorBuilder()
+                .authorIntention(questionEditDto.getAuthorIntention())
+                .build();
+        question.edit(questionEditor);
+        questionRepository.save(question);
+
+        return new QuestionResponse(question);
     }
 }

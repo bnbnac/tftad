@@ -68,4 +68,13 @@ public class Question {
 
         return h * 3600 + m * 60 + s;
     }
+
+    public QuestionEditor.QuestionEditorBuilder toEditorBuilder() {
+        return QuestionEditor.builder()
+                .authorIntention(authorIntention);
+    }
+
+    public void edit(QuestionEditor questionEditor) {
+        this.authorIntention = questionEditor.getAuthorIntention();
+    }
 }
