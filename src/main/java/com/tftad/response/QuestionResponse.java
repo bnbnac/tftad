@@ -22,18 +22,8 @@ public class QuestionResponse {
 
         this.id = question.getId();
         this.authorComment = question.getAuthorComment();
-        this.startTimeOnSecond = hhmmssTimeToSecond(question.getStartTime());
-        this.endTimeOnSecond = hhmmssTimeToSecond(question.getEndTime());
+        this.startTimeOnSecond = question.getStartTimeOnSecond();
+        this.endTimeOnSecond = question.getEndTimeOnSecond();
         this.fileName = question.generateFilename();
-    }
-
-    private Integer hhmmssTimeToSecond(String time) {
-        int t = Integer.parseInt(time);
-
-        int s = t % 100;
-        int m = (t / 100) % 100;
-        int h = t / 10000;
-
-        return h * 3600 + m * 60 + s;
     }
 }
