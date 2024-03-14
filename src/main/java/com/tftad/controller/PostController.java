@@ -9,7 +9,11 @@ import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
-import com.tftad.service.*;
+import com.tftad.response.PostResponseDetail;
+import com.tftad.service.ChannelService;
+import com.tftad.service.ExtractorService;
+import com.tftad.service.OAuthService;
+import com.tftad.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +66,7 @@ public class PostController {
     }
 
     @GetMapping("/posts/{postId}")
-    public PostResponse get(@PathVariable Long postId) {
+    public PostResponseDetail get(@PathVariable Long postId) {
         return postService.get(postId);
     }
 

@@ -7,6 +7,7 @@ import com.tftad.exception.PostNotFound;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
+import com.tftad.response.PostResponseDetail;
 import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +38,11 @@ public class PostService {
         return postRepository.save(post).getId();
     }
 
-    public PostResponse get(Long id) {
+    @Transactional
+    public PostResponseDetail get(Long id) {
         Post post = postRepository.findById(id).orElseThrow(PostNotFound::new);
 
-        return new PostResponse(post);
+        return new PostResponseDetail(post);
     }
 
     public List<PostResponse> getList(PostSearch postSearch) {

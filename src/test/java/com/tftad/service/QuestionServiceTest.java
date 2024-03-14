@@ -3,6 +3,8 @@ package com.tftad.service;
 import com.tftad.domain.Member;
 import com.tftad.domain.Post;
 import com.tftad.domain.Question;
+import com.tftad.exception.InvalidRequest;
+import com.tftad.exception.QuestionNotFound;
 import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
@@ -18,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 class QuestionServiceTest {
@@ -78,5 +81,114 @@ class QuestionServiceTest {
         assertEquals("end1", q1.getEndTime());
         assertEquals("start2", q2.getStartTime());
         assertEquals("end2", q2.getEndTime());
+    }
+
+    @Test
+    @DisplayName("question 1개 조회")
+    void test2() {
+
+    }
+
+    @Test
+    @DisplayName("question 삭제")
+    void test3() {
+        Member member1 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member1).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member1)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        Question question = Question.builder()
+                .endTime("111112")
+                .startTime("010000")
+                .authorComment("hello1")
+                .post(post)
+                .build();
+        Long questionId = questionRepository.save(question).getId();
+
+        // when
+        questionService.delete(memberId, questionId);
+
+        // then
+        assertEquals(0, questionRepository.count());
+    }
+
+    @Test
+    @DisplayName("question 삭제 - 존재하지 않는 question")
+    void test4() {
+        Member member1 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member1).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member1)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        Question question = Question.builder()
+                .endTime("111112")
+                .startTime("010000")
+                .authorComment("hello1")
+                .post(post)
+                .build();
+        Long questionId = questionRepository.save(question).getId();
+
+        // when then
+        assertThrows(QuestionNotFound.class, () -> {
+            questionService.delete(memberId, questionId + 1L);
+        });
+    }
+    @Test
+    @DisplayName("question 삭제 - 작성자가 아닌 멤버")
+    void test5() {
+        Member member1 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId1 = memberRepository.save(member1).getId();
+
+        Member member2 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId2 = memberRepository.save(member2).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member1)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        Question question = Question.builder()
+                .endTime("111112")
+                .startTime("010000")
+                .authorComment("hello1")
+                .post(post)
+                .build();
+        Long questionId = questionRepository.save(question).getId();
+
+        // when then
+        assertThrows(InvalidRequest.class, () -> {
+            questionService.delete(memberId2, questionId);
+        });
     }
 }

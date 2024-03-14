@@ -4,19 +4,20 @@ import com.tftad.domain.Post;
 import lombok.Getter;
 import org.springframework.util.Assert;
 
-@Getter
-public class PostResponse {
+import java.util.List;
+import java.util.stream.Collectors;
 
-    private static final int MAX_TITLE_LENGTH = 15;
-    private static final int MAX_CONTENT_LENGTH = 15;
+@Getter
+public class PostResponseDetail {
 
     private final Long id;
     private final String title;
     private final String content;
     private final Boolean published;
-    private final String videoId;
+    private final String videoUrl;
+    private final List<QuestionResponse> questions;
 
-    public PostResponse(Post post) {
+    public PostResponseDetail(Post post) {
         Assert.notNull(post, "post must not be null");
         Assert.notNull(post.getId(), "post id must not be null");
         Assert.hasText(post.getTitle(), "title must not be null");
@@ -25,9 +26,13 @@ public class PostResponse {
         Assert.hasText(post.getVideoId(), "videoId must not be null");
 
         this.id = post.getId();
-        this.title = post.generateLimitedTitle(MAX_TITLE_LENGTH);
-        this.content = post.generateLimitedContent(MAX_CONTENT_LENGTH);
+        this.title = post.getTitle();
+        this.content = post.getContent();
         this.published = post.getPublished();
-        this.videoId = post.generateYoutubeVideoUrl();
+        this.videoUrl = post.generateYoutubeVideoUrl();
+        this.questions = post.getQuestions()
+                .stream()
+                .map(QuestionResponse::new)
+                .collect(Collectors.toList());
     }
 }

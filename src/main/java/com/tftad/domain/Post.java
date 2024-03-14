@@ -68,6 +68,18 @@ public class Post {
         member.getPosts().add(this);
     }
 
+    public String generateYoutubeVideoUrl() {
+        return YOUTUBE_URL_PREFIX + videoId;
+    }
+
+    public String generateLimitedTitle(int limit) {
+        return title.substring(0, Math.min(title.length(), limit));
+    }
+
+    public String generateLimitedContent(int limit) {
+        return content.substring(0, Math.min(content.length(), limit));
+    }
+
     public void show() {
         this.published = true;
     }
