@@ -1,17 +1,16 @@
 package com.tftad.service;
 
-import com.tftad.domain.Member;
-import com.tftad.domain.Post;
-import com.tftad.domain.PostCreateDto;
-import com.tftad.domain.PostEditDto;
+import com.tftad.domain.*;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.PostNotFound;
 import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
+import com.tftad.repository.QuestionRepository;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
+import com.tftad.response.PostResponseDetail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,8 +42,12 @@ class PostServiceTest {
     @Autowired
     private ChannelRepository channelRepository;
 
+    @Autowired
+    private QuestionRepository questionRepository;
+
     @BeforeEach
     void clean() {
+        questionRepository.deleteAll();
         postRepository.deleteAll();
         channelRepository.deleteAll();
         memberRepository.deleteAll();
@@ -113,14 +116,35 @@ class PostServiceTest {
                 .build();
         postRepository.save(post);
 
+        Question question1 = Question.builder()
+                .endTime("111112")
+                .startTime("010000")
+                .authorComment("hello1")
+                .post(post)
+                .build();
+        Question question2 = Question.builder()
+                .endTime("222223")
+                .startTime("222222")
+                .authorComment("hello2")
+                .post(post)
+                .build();
+        questionRepository.save(question1);
+        questionRepository.save(question2);
+
         // when
-        PostResponse response = postService.get(post.getId());
+        PostResponseDetail response = postService.get(post.getId());
 
         // then
         assertNotNull(response);
         assertEquals("제목", response.getTitle());
         assertEquals("내용", response.getContent());
-        assertEquals("videoId", response.getVideoId());
+        assertEquals("https://youtu.be/videoId", response.getVideoUrl());
+        assertEquals("내용", response.getContent());
+        assertFalse(response.getPublished());
+        assertEquals("hello1", response.getQuestions().get(0).getAuthorComment());
+        assertEquals(3600, response.getQuestions().get(0).getStartTimeOnSecond());
+        assertEquals("hello2", response.getQuestions().get(1).getAuthorComment());
+        assertEquals("222222_222223.mp4", response.getQuestions().get(1).getFileName());
     }
 
     @Test
@@ -342,7 +366,7 @@ class PostServiceTest {
 
     @Test
     @DisplayName("글 삭제 - 존재하지 않는 글")
-    void test9() {
+    void test9_1() {
         Member member = Member.builder()
                 .email("email")
                 .password("pswd")
@@ -361,6 +385,37 @@ class PostServiceTest {
         // when then
         assertThrows(PostNotFound.class, () -> {
             postService.delete(member.getId(), post.getId() + 1L);
+        });
+    }
+
+    @Test
+    @DisplayName("글 삭제 - 작성자가 아닌 멤버")
+    void test9_2() {
+        Member member1 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId1 = memberRepository.save(member1).getId();
+
+        Member member2 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId2 = memberRepository.save(member2).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member1)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        // when then
+        assertThrows(InvalidRequest.class, () -> {
+            postService.delete(memberId2, postId);
         });
     }
 

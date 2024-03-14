@@ -2,6 +2,8 @@ package com.tftad.service;
 
 import com.tftad.domain.Post;
 import com.tftad.domain.Question;
+import com.tftad.exception.InvalidRequest;
+import com.tftad.exception.QuestionNotFound;
 import com.tftad.repository.QuestionRepository;
 import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ public class QuestionService {
 
     private final QuestionRepository questionRepository;
     private final PostService postService;
+    private final MemberService memberService;
 
     @Transactional
     public void saveQuestionsFromExtractorResult(Long postId, List<String> extractorResult) {
@@ -31,5 +34,18 @@ public class QuestionService {
 
             questionRepository.save(question);
         }
+    }
+
+    @Transactional
+    public void delete(Long memberId, Long questionId) {
+        Question question = questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
+        if (!memberId.equals(question.getPost().getMember().getId())) {
+            throw new InvalidRequest("questionId", "문제의 작성자만 문제를 삭제할 수 있습니다");
+        }
+        questionRepository.delete(question);
+    }
+
+    public Question getQuestionById(Long questionId) {
+        return questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
     }
 }
