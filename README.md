@@ -3,6 +3,7 @@
 ---
 
 ## response NPE 처리!!!!
+### extractor service좀 어떻게 해봐...
 
 - unpub post edit transaction. edit중에 extractor가 껴들면어캄?
 - req res 클래스 validation, weblient npe (oauth, extractor)
@@ -11,6 +12,7 @@
 - showPost가 필요한가? published가 필요한가?
 - 근데 getPosition은 postRepo를 계속 쓰는데 이걸로 구현하는게 맞나
 - downloads, cutter 찌꺼기 지우는작업, force quit 처리 끝내고 testmethod
+- post가 channel을 가지면 편한가
 
 ---
 
@@ -32,3 +34,9 @@
 - validateExtractorResultOrDeletePost UX 고려 - 바로 지워버리지 말고 언제언제 지워질거다 이런식으로
 - validateChannelOwner 성능테스트 -> 멤버에서 한번 걸러서 찾는거랑ㅇ비교
 - yt-dlp를 알아서 업데이트하는법?
+- IP 주소나 기기 정보를 토큰에 포함 (추가 보안 요소) 추가적인 보안 요소를 도입할 수 있다.
+  - 예를 들어, IP 주소나 기기 정보를 토큰에 포함시켜 토큰을 사용하는 클라이언트의 신원을 확인할 수 있다.
+  - 이를 통해 탈취된 토큰이 다른 기기나 IP 주소에서 사용되는 것을 방지할 수 있다.
+- comment 기능정도는 넣어줘야 rdb를 쓰는 보람이 있는거같다
+
+ 

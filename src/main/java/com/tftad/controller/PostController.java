@@ -33,7 +33,6 @@ public class PostController {
     @PostMapping("/posts")
     public Long post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
         PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember, postCreate);
-
         String youtubeChannelId = oAuthService.queryVideoResourceToGetChannelId(postCreateDto.getVideoId());
         channelService.validateChannelOwner(postCreateDto.getMemberId(), youtubeChannelId);
 
@@ -55,7 +54,7 @@ public class PostController {
 
     private void queryToExtractor(String videoId, Long memberId, Long postId) {
         try {
-            extractorService.queryAnalysis(videoId, postId);
+            extractorService.queryAnalysis(videoId, memberId, postId);
         } catch (Exception e) {
             postService.delete(memberId, postId);
             throw new ExtractorServerError();
@@ -88,6 +87,6 @@ public class PostController {
     @DeleteMapping("/posts/{postId}")
     public ResponseEntity<JsonNode> delete(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
         postService.delete(authenticatedMember.getId(), postId);
-        return extractorService.queryDelete(postId);
+        return extractorService.deleteAnalysisByPostId(authenticatedMember.getId(), postId);
     }
 }

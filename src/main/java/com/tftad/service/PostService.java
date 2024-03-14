@@ -70,8 +70,10 @@ public class PostService {
 
     @Transactional
     public void delete(Long memberId, Long postId) {
-        memberService.getMemberById(memberId);
         Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
+        if (!memberId.equals(post.getMember().getId())) {
+            throw new InvalidRequest("postId", "게시글의 작성자만 글을 삭제할 수 있습니다");
+        }
         postRepository.delete(post);
     }
 
