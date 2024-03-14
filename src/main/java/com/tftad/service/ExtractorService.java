@@ -8,7 +8,9 @@ public interface ExtractorService {
 
     PositionOfPostResponse getPosition(Long postId);
 
-    void queryAnalysis(String videoId, Long postId);
+    void queryAnalysis(String videoId, Long memberId, Long postId);
+
+    ResponseEntity<JsonNode> deleteAnalysisByPostId(Long memberId, Long postId);
 
     ResponseEntity<JsonNode> queryDelete(Long postId);
 }

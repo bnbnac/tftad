@@ -45,9 +45,10 @@ public class ExtractorServiceImpl implements ExtractorService {
     }
 
     @Override
-    public void queryAnalysis(String videoId, Long postId) {
+    public void queryAnalysis(String videoId, Long memberId, Long postId) {
         Analysis analysis = Analysis.builder()
                 .videoId(videoId)
+                .memberId(memberId)
                 .postId(postId)
                 .build();
 
@@ -66,11 +67,12 @@ public class ExtractorServiceImpl implements ExtractorService {
     }
 
     @Override
-    public ResponseEntity<JsonNode> queryDelete(Long postId) {
+    public ResponseEntity<JsonNode> deleteAnalysisByPostId(Long memberId, Long postId) {
         WebClient client = WebClient.create();
 
-        String uri = UriComponentsBuilder.fromUriString(urls.getExtractorServer() + "/delete")
-                .queryParam("id", postId)
+        String uri = UriComponentsBuilder.fromUriString(urls.getExtractorServer() + "/posts")
+                .queryParam("memberId", memberId)
+                .queryParam("postId", postId)
                 .build().toUriString();
 
         return client.delete()
