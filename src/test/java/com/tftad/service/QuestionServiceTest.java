@@ -3,6 +3,7 @@ package com.tftad.service;
 import com.tftad.domain.Member;
 import com.tftad.domain.Post;
 import com.tftad.domain.Question;
+import com.tftad.domain.QuestionEditDto;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.QuestionNotFound;
 import com.tftad.repository.ChannelRepository;
@@ -110,7 +111,7 @@ class QuestionServiceTest {
         Question question = Question.builder()
                 .endTime("111112")
                 .startTime("010000")
-                .authorComment("hello1")
+                .authorIntention("hello1")
                 .post(post)
                 .build();
         Long questionId = questionRepository.save(question).getId();
@@ -143,7 +144,7 @@ class QuestionServiceTest {
         Question question = Question.builder()
                 .endTime("111112")
                 .startTime("010000")
-                .authorComment("hello1")
+                .authorIntention("hello1")
                 .post(post)
                 .build();
         Long questionId = questionRepository.save(question).getId();
@@ -181,7 +182,7 @@ class QuestionServiceTest {
         Question question = Question.builder()
                 .endTime("111112")
                 .startTime("010000")
-                .authorComment("hello1")
+                .authorIntention("hello1")
                 .post(post)
                 .build();
         Long questionId = questionRepository.save(question).getId();
@@ -190,5 +191,129 @@ class QuestionServiceTest {
         assertThrows(InvalidRequest.class, () -> {
             questionService.delete(memberId2, questionId);
         });
+    }
+
+    @Test
+    @DisplayName("question 수정 - 존재하지 않는 question")
+    void test6() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        Question question = Question.builder()
+                .authorIntention("hello")
+                .endTime("000100")
+                .startTime("000001")
+                .post(post)
+                .build();
+        Long questionId = questionRepository.save(question).getId();
+
+        // when
+        QuestionEditDto questionEditDto = QuestionEditDto.builder()
+                .questionId(questionId + 1).memberId(memberId).authorIntention("hi").build();
+
+        // then
+        assertThrows(QuestionNotFound.class, () -> {
+            questionService.edit(questionEditDto);
+        });
+    }
+
+    @Test
+    @DisplayName("question 수정 - 작성자가 아닌 멤버")
+    void test7() {
+        Member member1 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId1 = memberRepository.save(member1).getId();
+
+        Member member2 = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId2 = memberRepository.save(member2).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member1)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        Question question = Question.builder()
+                .authorIntention("hello")
+                .endTime("000100")
+                .startTime("000001")
+                .post(post)
+                .build();
+        Long questionId = questionRepository.save(question).getId();
+
+        // when
+        QuestionEditDto questionEditDto = QuestionEditDto.builder()
+                .questionId(questionId)
+                .authorIntention("modified hello")
+                .memberId(memberId2)
+                .build();
+
+        // then
+        assertThrows(InvalidRequest.class, () -> {
+            questionService.edit(questionEditDto);
+        });
+    }
+
+    @Test
+    @DisplayName("question 수정")
+    void test8() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        Question question = Question.builder()
+                .authorIntention("hello")
+                .endTime("000100")
+                .startTime("000001")
+                .post(post)
+                .build();
+        Long questionId = questionRepository.save(question).getId();
+
+        QuestionEditDto questionEditDto = QuestionEditDto.builder()
+                .questionId(questionId)
+                .authorIntention("modified hello")
+                .memberId(memberId)
+                .build();
+
+        // when
+        questionService.edit(questionEditDto);
+        Question changedQuestion = questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
+
+        // then
+        assertEquals("modified hello", changedQuestion.getAuthorIntention());
+        assertEquals("000001", changedQuestion.getStartTime());
+        assertEquals("000100", changedQuestion.getEndTime());
     }
 }
