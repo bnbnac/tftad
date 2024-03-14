@@ -95,4 +95,25 @@ public class ExtractorServiceImpl implements ExtractorService {
                 .toEntity(JsonNode.class)
                 .block();
     }
+
+    @Override
+    public ResponseEntity<JsonNode> deleteAnalysisByQuestionFilename(Long memberId, Long postId, String filename) {
+        WebClient client = WebClient.create();
+
+        String uri = UriComponentsBuilder.fromUriString(urls.getExtractorServer() + "/questions")
+                .queryParam("memberId", memberId)
+                .queryParam("postId", postId)
+                .queryParam("filename", filename)
+                .build().toUriString();
+
+        return client.delete()
+                .uri(uri)
+                .retrieve()
+                .toEntity(JsonNode.class)
+                .block();
+    }
+
+    @Override
+    public void deleteAnalysisByMemberId(Long memberId) {
+    }
 }

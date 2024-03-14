@@ -12,5 +12,7 @@ public interface ExtractorService {
 
     ResponseEntity<JsonNode> deleteAnalysisByPostId(Long memberId, Long postId);
 
-    ResponseEntity<JsonNode> queryDelete(Long postId);
+    ResponseEntity<JsonNode> deleteAnalysisByQuestionFilename(Long memberId, Long postId, String filename);
+
+    void deleteAnalysisByMemberId(Long memberId);
 }
