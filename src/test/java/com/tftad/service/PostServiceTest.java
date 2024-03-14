@@ -119,13 +119,13 @@ class PostServiceTest {
         Question question1 = Question.builder()
                 .endTime("111112")
                 .startTime("010000")
-                .authorComment("hello1")
+                .authorIntention("hello1")
                 .post(post)
                 .build();
         Question question2 = Question.builder()
                 .endTime("222223")
                 .startTime("222222")
-                .authorComment("hello2")
+                .authorIntention("hello2")
                 .post(post)
                 .build();
         questionRepository.save(question1);
@@ -141,9 +141,9 @@ class PostServiceTest {
         assertEquals("https://youtu.be/videoId", response.getVideoUrl());
         assertEquals("내용", response.getContent());
         assertFalse(response.getPublished());
-        assertEquals("hello1", response.getQuestions().get(0).getAuthorComment());
+        assertEquals("hello1", response.getQuestions().get(0).getAuthorIntention());
         assertEquals(3600, response.getQuestions().get(0).getStartTimeOnSecond());
-        assertEquals("hello2", response.getQuestions().get(1).getAuthorComment());
+        assertEquals("hello2", response.getQuestions().get(1).getAuthorIntention());
         assertEquals("222222_222223.mp4", response.getQuestions().get(1).getFileName());
     }
 

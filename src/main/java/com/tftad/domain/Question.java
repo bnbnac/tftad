@@ -21,21 +21,21 @@ public class Question {
     @JoinColumn(name = "POST_ID")
     private Post post;
 
-    private String authorComment;
+    private String authorIntention;
 
     private String startTime;
 
     private String endTime;
 
     @Builder
-    public Question(String startTime, String endTime, Post post, String authorComment) {
+    public Question(String startTime, String endTime, Post post, String authorIntention) {
         Assert.hasText(startTime, "startTime must not be null");
         Assert.hasText(endTime, "endTime must not be null");
         Assert.notNull(post, "post must not be null");
 
         this.startTime = startTime;
         this.endTime = endTime;
-        this.authorComment = authorComment;
+        this.authorIntention = authorIntention;
         changePost(post);
     }
 

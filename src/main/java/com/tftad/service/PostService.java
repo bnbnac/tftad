@@ -53,8 +53,6 @@ public class PostService {
 
     @Transactional
     public PostResponse edit(PostEditDto postEditDto) {
-        memberService.getMemberById(postEditDto.getMemberId());
-
         Post post = postRepository.findById(postEditDto.getPostId()).orElseThrow(PostNotFound::new);
         if (!postEditDto.getMemberId().equals(post.getMember().getId())) {
             throw new InvalidRequest("memberId", "소유자만 게시글을 수정할 수 있습니다");
