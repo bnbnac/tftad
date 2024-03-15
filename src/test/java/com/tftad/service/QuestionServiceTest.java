@@ -10,6 +10,7 @@ import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.repository.QuestionRepository;
+import com.tftad.response.QuestionResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -86,8 +87,69 @@ class QuestionServiceTest {
 
     @Test
     @DisplayName("question 1개 조회")
-    void test2() {
+    void test2_1() {
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member).getId();
 
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        Question question = Question.builder()
+                .endTime("111112")
+                .startTime("010000")
+                .authorIntention("hello1")
+                .post(post)
+                .build();
+        Long questionId = questionRepository.save(question).getId();
+
+        // when
+        QuestionResponse questionResponse = questionService.get(questionId);
+
+        // then
+        assertEquals(11 * 3600 + 11 * 60 + 12, questionResponse.getEndTimeOnSecond());
+        assertEquals("hello1", questionResponse.getAuthorIntention());
+        assertEquals(questionId, questionResponse.getId());
+        assertEquals("010000_111112.mp4", questionResponse.getFileName());
+    }
+
+    @Test
+    @DisplayName("question 1개 조회 - 존재하지 않는 question")
+    void test2_2() {
+
+        Member member = Member.builder()
+                .email("email")
+                .password("pswd")
+                .name("name")
+                .build();
+        Long memberId = memberRepository.save(member).getId();
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .videoId("videoId")
+                .member(member)
+                .build();
+        Long postId = postRepository.save(post).getId();
+
+        Question question = Question.builder()
+                .endTime("111112")
+                .startTime("010000")
+                .authorIntention("hello1")
+                .post(post)
+                .build();
+        Long questionId = questionRepository.save(question).getId();
+
+        // when then
+        assertThrows(QuestionNotFound.class, () -> questionService.get(questionId + 1));
     }
 
     @Test

@@ -9,6 +9,7 @@ import com.tftad.response.MemberResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class MemberService {
         return new MemberResponse(getMemberById(memberId));
     }
 
+    @Transactional
     public MemberResponse edit(MemberEditDto memberEditDto) {
         Member member = memberRepository.findById(memberEditDto.getMemberId()).orElseThrow(MemberNotFound::new);
 
