@@ -3,7 +3,10 @@ package com.tftad.service;
 import com.tftad.domain.Member;
 import com.tftad.domain.MemberEditDto;
 import com.tftad.exception.MemberNotFound;
+import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
+import com.tftad.repository.PostRepository;
+import com.tftad.repository.QuestionRepository;
 import com.tftad.response.MemberResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,8 +25,20 @@ public class MemberServiceTest {
     @Autowired
     MemberRepository memberRepository;
 
+    @Autowired
+    QuestionRepository questionRepository;
+
+    @Autowired
+    PostRepository postRepository;
+
+    @Autowired
+    ChannelRepository channelRepository;
+
     @BeforeEach
     void clean() {
+        questionRepository.deleteAll();
+        postRepository.deleteAll();
+        channelRepository.deleteAll();
         memberRepository.deleteAll();
     }
 

@@ -8,6 +8,8 @@ import com.tftad.exception.ChannelNotFound;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.MemberRepository;
+import com.tftad.repository.PostRepository;
+import com.tftad.repository.QuestionRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +34,12 @@ class ChannelServiceTest {
     @Autowired
     private ChannelService channelService;
 
+    @Autowired
+    QuestionRepository questionRepository;
+
+    @Autowired
+    PostRepository postRepository;
+
     static private JsonNode channelResource;
 
     @BeforeAll
@@ -43,6 +51,8 @@ class ChannelServiceTest {
 
     @BeforeEach
     void clean() {
+        questionRepository.deleteAll();
+        postRepository.deleteAll();
         channelRepository.deleteAll();
         memberRepository.deleteAll();
     }
