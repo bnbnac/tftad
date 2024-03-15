@@ -46,4 +46,15 @@ public class Member {
         this.password = password;
         this.createdAt = LocalDateTime.now();
     }
+
+    public MemberEditor.MemberEditorBuilder toEditorBuilder() {
+        return MemberEditor.builder()
+                .name(name)
+                .password(password);
+    }
+
+    public void edit(MemberEditor memberEditor) {
+        this.name = memberEditor.getName();
+        this.password = memberEditor.getPassword();
+    }
 }

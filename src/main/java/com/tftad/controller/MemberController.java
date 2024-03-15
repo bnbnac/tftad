@@ -21,4 +21,12 @@ public class MemberController {
     public MemberResponse get(@PathVariable Long memberId) {
         return memberService.get(memberId);
     }
+
+    @PatchMapping("members/{memberId}")
+    public MemberResponse edit(AuthenticatedMember authenticatedMember, MemberEdit memberEdit) {
+        MemberEditDto memberEditDto = memberEdit.toMemberEditDtoBuilder()
+                .memberId(authenticatedMember.getId())
+                .build();
+        return memberService.edit(memberEditDto);
+    }
 }

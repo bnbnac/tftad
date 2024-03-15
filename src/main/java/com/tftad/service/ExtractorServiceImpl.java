@@ -112,8 +112,4 @@ public class ExtractorServiceImpl implements ExtractorService {
                 .toEntity(JsonNode.class)
                 .block();
     }
-
-    @Override
-    public void deleteAnalysisByMemberId(Long memberId) {
-    }
 }
