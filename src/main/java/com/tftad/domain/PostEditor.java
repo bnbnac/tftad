@@ -39,7 +39,7 @@ public class PostEditor {
         }
 
         public PostEditor build() {
-            return new PostEditor(this.title, this.content);
+            return new PostEditor(title, content);
         }
     }
 }

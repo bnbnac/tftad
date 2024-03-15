@@ -14,6 +14,8 @@
 - downloads, cutter 찌꺼기 지우는작업, force quit 처리 끝내고 testmethod
 - post가 channel을 가지면 편한가
 - delete member, update member, update question
+- 비번변경용 비번클래스 나누기
+- extractor로 나가는 reqdto를 만들자 특히 뭔가 delete할때 서비스에서 컨트롤러로 어떤 dto를 올리고 그걸 변환해서 reqdto를 만들자
 
 ---
 

@@ -1,9 +1,6 @@
 package com.tftad.service;
 
-import com.tftad.domain.Post;
-import com.tftad.domain.Question;
-import com.tftad.domain.QuestionEditDto;
-import com.tftad.domain.QuestionEditor;
+import com.tftad.domain.*;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.QuestionNotFound;
 import com.tftad.repository.QuestionRepository;
@@ -40,12 +37,18 @@ public class QuestionService {
     }
 
     @Transactional
-    public void delete(Long memberId, Long questionId) {
+    public QuestionDeleteDto delete(Long memberId, Long questionId) {
         Question question = questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
+
         if (!memberId.equals(question.getPost().getMember().getId())) {
             throw new InvalidRequest("questionId", "문제의 작성자만 문제를 삭제할 수 있습니다");
         }
         questionRepository.delete(question);
+
+        return QuestionDeleteDto.builder()
+                .filename(question.generateFilename())
+                .postId(question.getPost().getId())
+                .build();
     }
 
     public Question getQuestionById(Long questionId) {

@@ -39,8 +39,8 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDetail get(Long id) {
-        Post post = postRepository.findById(id).orElseThrow(PostNotFound::new);
+    public PostResponseDetail get(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
 
         return new PostResponseDetail(post);
     }

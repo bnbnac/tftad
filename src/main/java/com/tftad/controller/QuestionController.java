@@ -2,7 +2,7 @@ package com.tftad.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.AuthenticatedMember;
-import com.tftad.domain.Question;
+import com.tftad.domain.QuestionDeleteDto;
 import com.tftad.domain.QuestionEditDto;
 import com.tftad.request.QuestionEdit;
 import com.tftad.response.QuestionResponse;
@@ -23,12 +23,9 @@ public class QuestionController {
 
     @DeleteMapping("/questions/{questionId}")
     public ResponseEntity<JsonNode> delete(AuthenticatedMember authenticatedMember, @PathVariable Long questionId) {
-        Question question = questionService.getQuestionById(questionId);
-        String filename = question.generateFilename();
-        Long postId = question.getPost().getId();
-
-        questionService.delete(authenticatedMember.getId(), questionId);
-        return extractorService.deleteAnalysisByQuestionFilename(authenticatedMember.getId(), postId, filename);
+        QuestionDeleteDto delete = questionService.delete(authenticatedMember.getId(), questionId);
+        return extractorService.deleteAnalysisByQuestionFilename(
+                authenticatedMember.getId(), delete.getPostId(), delete.getFilename());
     }
 
     @PatchMapping("/questions/{questionId}")
