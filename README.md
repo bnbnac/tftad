@@ -42,5 +42,6 @@
   - 이를 통해 탈취된 토큰이 다른 기기나 IP 주소에서 사용되는 것을 방지할 수 있다.
 - comment 기능정도는 넣어줘야 rdb를 쓰는 보람이 있는거같다
 - 결국 세션db가 필요하다? logout deleteMember
+- member edit delete는 더 강한 인증필요?
 
  

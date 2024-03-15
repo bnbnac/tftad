@@ -18,7 +18,6 @@ public class QuestionService {
 
     private final QuestionRepository questionRepository;
     private final PostService postService;
-    private final MemberService memberService;
 
     @Transactional
     public void saveQuestionsFromExtractorResult(Long postId, List<String> extractorResult) {
@@ -51,8 +50,9 @@ public class QuestionService {
                 .build();
     }
 
-    public Question getQuestionById(Long questionId) {
-        return questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
+    public QuestionResponse get(Long questionId) {
+        Question question = questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
+        return new QuestionResponse(question);
     }
 
     @Transactional
