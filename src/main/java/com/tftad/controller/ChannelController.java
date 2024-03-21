@@ -16,7 +16,7 @@ public class ChannelController {
     private final ChannelService channelService;
     private final OAuthService oAuthService;
 
-    @PostMapping("/oauth/add/channel")
+    @PostMapping("/channels")
     public Long addChannel(OAuthedMember oAuthedMember) {
         String accessToken = oAuthService.queryAccessToken(oAuthedMember.getAuthorizationCode());
         JsonNode channelResource = oAuthService.queryChannelResource(accessToken);

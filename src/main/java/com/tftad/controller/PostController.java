@@ -38,10 +38,10 @@ public class PostController {
     public Long post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
         PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember, postCreate);
         String youtubeChannelId = oAuthService.queryVideoResourceToGetChannelId(postCreateDto.getVideoId());
-        channelService.validateChannelOwner(postCreateDto.getMemberId(), youtubeChannelId);
+        Long channelId = channelService.validateChannelOwner(postCreateDto.getMemberId(), youtubeChannelId);
 
         postService.validatePostedVideo(postCreateDto);
-        Long postId = postService.savePost(postCreateDto);
+        Long postId = postService.savePost(postCreateDto, channelId);
 
         queryToExtractor(postCreateDto.getVideoId(), postCreateDto.getMemberId(), postId);
         return postId;

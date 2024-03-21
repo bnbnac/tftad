@@ -27,6 +27,10 @@ public class Post {
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CHANNEL_ID")
+    private Channel channel;
+
     private String title;
 
     private String videoId;
@@ -40,16 +44,18 @@ public class Post {
     private List<Question> questions = new ArrayList<>();
 
     @Builder
-    public Post(String title, String content, String videoId, Member member) {
+    public Post(String title, String content, String videoId, Member member, Channel channel) {
         Assert.hasText(title, "title must not be null");
         Assert.hasText(content, "content must not be null");
         Assert.hasText(videoId, "videoId must not be null");
         Assert.notNull(member, "member must not be null");
+        Assert.notNull(channel, "channel must not be null");
 
         this.title = title;
         this.content = content;
         this.videoId = videoId;
         changeMember(member);
+        changeChannel(channel);
     }
 
     public PostEditor.PostEditorBuilder toEditorBuilder() {
@@ -69,6 +75,14 @@ public class Post {
         }
         this.member = member;
         member.getPosts().add(this);
+    }
+
+    private void changeChannel(Channel channel) {
+        if (this.channel != null) {
+            this.channel.getPosts().remove(this);
+        }
+        this.channel = channel;
+        channel.getPosts().add(this);
     }
 
     public String generateYoutubeVideoUrl() {

@@ -14,7 +14,7 @@ public class PostResponse {
     private final String title;
     private final String content;
     private final Boolean published;
-    private final String videoId;
+    private final String videoUrl;
 
     public PostResponse(Post post) {
         Assert.notNull(post, "post must not be null");
@@ -28,6 +28,6 @@ public class PostResponse {
         this.title = post.generateLimitedTitle(MAX_TITLE_LENGTH);
         this.content = post.generateLimitedContent(MAX_CONTENT_LENGTH);
         this.published = post.getPublished();
-        this.videoId = post.generateYoutubeVideoUrl();
+        this.videoUrl = post.generateYoutubeVideoUrl();
     }
 }

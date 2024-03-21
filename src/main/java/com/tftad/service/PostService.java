@@ -24,16 +24,19 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final MemberService memberService;
+    private final ChannelService channelService;
 
     @Transactional
-    public Long savePost(PostCreateDto postCreateDto) {
+    public Long savePost(PostCreateDto postCreateDto, Long channelId) {
         Member member = memberService.getMemberById(postCreateDto.getMemberId());
+        Channel channel = channelService.getChannelById(channelId);
 
         Post post = Post.builder()
                 .title(postCreateDto.getTitle())
                 .content(postCreateDto.getContent())
                 .videoId(postCreateDto.getVideoId())
                 .member(member)
+                .channel(channel)
                 .build();
         return postRepository.save(post).getId();
     }
@@ -45,6 +48,7 @@ public class PostService {
         return new PostResponseDetail(post);
     }
 
+    @Transactional
     public List<PostResponse> getList(PostSearch postSearch) {
         return postRepository.getList(postSearch).stream()
                 .map(PostResponse::new)

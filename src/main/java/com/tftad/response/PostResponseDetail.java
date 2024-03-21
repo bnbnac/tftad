@@ -16,6 +16,7 @@ public class PostResponseDetail {
     private final Boolean published;
     private final String videoUrl;
     private final List<QuestionResponse> questions;
+    private final ChannelResponse channel;
 
     public PostResponseDetail(Post post) {
         Assert.notNull(post, "post must not be null");
@@ -34,5 +35,6 @@ public class PostResponseDetail {
                 .stream()
                 .map(QuestionResponse::new)
                 .collect(Collectors.toList());
+        this.channel = new ChannelResponse(post.getChannel());
     }
 }

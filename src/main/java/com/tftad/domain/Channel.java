@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,6 +27,9 @@ public class Channel {
     private String channelTitle;
 
     private String youtubeChannelId;
+
+    @OneToMany(mappedBy = "channel")
+    private List<Post> posts = new ArrayList<>();
 
     @Builder
     public Channel(String channelTitle, String youtubeChannelId, Member member) {

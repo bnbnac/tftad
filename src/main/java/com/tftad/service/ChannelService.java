@@ -26,7 +26,7 @@ public class ChannelService {
                 });
     }
 
-    public void validateChannelOwner(Long memberId, String youtubeChannelId) {
+    public Long validateChannelOwner(Long memberId, String youtubeChannelId) {
         Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
 
         if (!memberId.equals(channel.getMember().getId())) {
@@ -34,6 +34,7 @@ public class ChannelService {
                     "youtubeChannelId", "계정에 유튜브 채널을 등록해주세요. channelId: " + youtubeChannelId
             );
         }
+        return channel.getId();
     }
 
     @Transactional
@@ -46,5 +47,9 @@ public class ChannelService {
                 .member(member)
                 .build();
         return channelRepository.save(channel).getId();
+    }
+
+    public Channel getChannelById(Long channelId) {
+        return channelRepository.findById(channelId).orElseThrow(ChannelNotFound::new);
     }
 }
