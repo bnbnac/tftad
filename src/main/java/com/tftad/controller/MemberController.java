@@ -22,6 +22,11 @@ public class MemberController {
         return memberService.get(memberId);
     }
 
+    @GetMapping("/members/me")
+    public MemberResponse get(AuthenticatedMember authenticatedMember) {
+        return memberService.get(authenticatedMember.getId());
+    }
+
     @PatchMapping("members/{memberId}")
     public MemberResponse edit(AuthenticatedMember authenticatedMember, MemberEdit memberEdit) {
         MemberEditDto memberEditDto = memberEdit.toMemberEditDtoBuilder()

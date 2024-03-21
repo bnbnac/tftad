@@ -144,7 +144,7 @@ class PostServiceTest {
         assertEquals("hello1", response.getQuestions().get(0).getAuthorIntention());
         assertEquals(3600, response.getQuestions().get(0).getStartTimeOnSecond());
         assertEquals("hello2", response.getQuestions().get(1).getAuthorIntention());
-        assertEquals("222222_222223.mp4", response.getQuestions().get(1).getFileName());
+        assertEquals("222222_222223.mp4", response.getQuestions().get(1).getFilename());
     }
 
     @Test

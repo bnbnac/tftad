@@ -48,7 +48,7 @@ public class Question {
     }
 
     public String generateFilename() {
-        return startTime + "_" + endTime + ".mp4";
+        return post.getMember().getId() + "/" + post.getId() + "/" + startTime + "_" + endTime + ".mp4";
     }
 
     public Integer getStartTimeOnSecond() {

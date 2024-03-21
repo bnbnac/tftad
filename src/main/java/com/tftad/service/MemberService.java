@@ -22,6 +22,7 @@ public class MemberService {
         return memberRepository.findById(memberId).orElseThrow(MemberNotFound::new);
     }
 
+    @Transactional
     public MemberResponse get(Long memberId) {
         return new MemberResponse(getMemberById(memberId));
     }

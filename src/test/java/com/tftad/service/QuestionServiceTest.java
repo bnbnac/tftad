@@ -118,7 +118,7 @@ class QuestionServiceTest {
         assertEquals(11 * 3600 + 11 * 60 + 12, questionResponse.getEndTimeOnSecond());
         assertEquals("hello1", questionResponse.getAuthorIntention());
         assertEquals(questionId, questionResponse.getId());
-        assertEquals("010000_111112.mp4", questionResponse.getFileName());
+        assertEquals("010000_111112.mp4", questionResponse.getFilename());
     }
 
     @Test

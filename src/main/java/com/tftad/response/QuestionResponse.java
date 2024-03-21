@@ -11,7 +11,7 @@ public class QuestionResponse {
     private final String authorIntention;
     private final Integer startTimeOnSecond;
     private final Integer endTimeOnSecond;
-    private final String fileName;
+    private final String filename;
 
     public QuestionResponse(Question question) {
         Assert.notNull(question, "question must not be null");
@@ -23,6 +23,6 @@ public class QuestionResponse {
         this.authorIntention = question.getAuthorIntention();
         this.startTimeOnSecond = question.getStartTimeOnSecond();
         this.endTimeOnSecond = question.getEndTimeOnSecond();
-        this.fileName = question.generateFilename();
+        this.filename = question.generateFilename();
     }
 }
