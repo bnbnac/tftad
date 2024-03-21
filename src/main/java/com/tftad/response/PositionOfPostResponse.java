@@ -1,35 +1,25 @@
 package com.tftad.response;
 
-import io.jsonwebtoken.lang.Assert;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 public class PositionOfPostResponse {
-
-    private final Position position;
-    private final boolean published;
+    private final String curPosition;
+    private final String initialPosition;
+    private final Boolean published;
+    private final String state;
+    private final String curFrame;
+    private final String totalFrame;
 
     @Builder
-    public PositionOfPostResponse(Integer initial, Integer current, boolean published) {
-        Assert.notNull(published, "publish must not be null");
-
-        this.position = Position.builder()
-                .current(current)
-                .initial(initial)
-                .build();
+    public PositionOfPostResponse(String curPosition, String initialPosition, String state,
+                                  String curFrame, String totalFrame, Boolean published) {
         this.published = published;
-    }
-
-    @Getter
-    public static class Position {
-        private final Integer initial;
-        private final Integer current;
-
-        @Builder
-        public Position(Integer initial, Integer current) {
-            this.initial = initial;
-            this.current = current;
-        }
+        this.curPosition = curPosition;
+        this.initialPosition = initialPosition;
+        this.curFrame = curFrame;
+        this.totalFrame = totalFrame;
+        this.state = state;
     }
 }

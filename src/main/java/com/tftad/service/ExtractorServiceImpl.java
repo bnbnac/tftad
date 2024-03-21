@@ -34,12 +34,19 @@ public class ExtractorServiceImpl implements ExtractorService {
         if (response.getStatusCode() != HttpStatus.OK) {
             throw new ExtractorServerError();
         }
-        int current = response.getBody().get("current").asInt();
-        int initial = response.getBody().get("initial").asInt();
+        int curPosition = response.getBody().get("curPosition").asInt();
+        int initialPosition = response.getBody().get("initialPosition").asInt();
+        String curPostId = response.getBody().get("curPostId").asText();
+        String curFrame = response.getBody().get("curFrame").asText();
+        String totalFrame = response.getBody().get("totalFrame").asText();
+        String state = response.getBody().get("state").asText();
 
         return PositionOfPostResponse.builder()
-                .current(current)
-                .initial(initial)
+                .curPosition(String.valueOf(curPosition))
+                .initialPosition(String.valueOf(initialPosition))
+                .state(state)
+                .totalFrame(totalFrame)
+                .curFrame(curFrame)
                 .published(false)
                 .build();
     }
