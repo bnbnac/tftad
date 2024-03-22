@@ -70,6 +70,11 @@ public class PostController {
         return postService.get(postId);
     }
 
+    @GetMapping("/posts/simple/{postId}")
+    public PostResponse getSimple(@PathVariable Long postId) {
+        return postService.getSimple(postId);
+    }
+
     @GetMapping("/posts")
     public List<PostResponse> getList(@ModelAttribute PostSearch postSearch) {
         return postService.getList(postSearch);

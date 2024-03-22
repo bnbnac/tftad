@@ -10,11 +10,7 @@ import java.util.stream.Collectors;
 @Getter
 public class PostResponseDetail {
 
-    private final Long id;
-    private final String title;
-    private final String content;
-    private final Boolean published;
-    private final String videoUrl;
+    private final PostResponse post;
     private final List<QuestionResponse> questions;
     private final ChannelResponse channel;
 
@@ -25,12 +21,10 @@ public class PostResponseDetail {
         Assert.hasText(post.getContent(), "content must not be null");
         Assert.notNull(post.getPublished(), "published must not be null");
         Assert.hasText(post.getVideoId(), "videoId must not be null");
+        Assert.notNull(post.getCreatedAt(), "created time must not be null");
+        Assert.notNull(post.getUpdatedAt(), "updated time must not be null");
 
-        this.id = post.getId();
-        this.title = post.getTitle();
-        this.content = post.getContent();
-        this.published = post.getPublished();
-        this.videoUrl = post.generateYoutubeVideoUrl();
+        this.post = new PostResponse(post);
         this.questions = post.getQuestions()
                 .stream()
                 .map(QuestionResponse::new)

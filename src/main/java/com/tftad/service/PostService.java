@@ -49,6 +49,13 @@ public class PostService {
     }
 
     @Transactional
+    public PostResponse getSimple(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
+
+        return new PostResponse(post);
+    }
+
+    @Transactional
     public List<PostResponse> getList(PostSearch postSearch) {
         return postRepository.getList(postSearch).stream()
                 .map(PostResponse::new)
