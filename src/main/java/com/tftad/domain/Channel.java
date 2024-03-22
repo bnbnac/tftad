@@ -28,17 +28,21 @@ public class Channel {
 
     private String youtubeChannelId;
 
+    private String thumbnail;
+
     @OneToMany(mappedBy = "channel")
     private List<Post> posts = new ArrayList<>();
 
     @Builder
-    public Channel(String channelTitle, String youtubeChannelId, Member member) {
+    public Channel(String channelTitle, String youtubeChannelId, String thumbnail, Member member) {
         Assert.hasText(channelTitle, "channelTitle must not be null");
         Assert.hasText(youtubeChannelId, "youtubeChannelId must not be null");
+        Assert.notNull(thumbnail, "thumbnail must not be null(google may serve)");
         Assert.notNull(member, "member must not be null");
 
         this.channelTitle = channelTitle;
         this.youtubeChannelId = youtubeChannelId;
+        this.thumbnail = thumbnail;
         changeMember(member);
     }
 

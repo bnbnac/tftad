@@ -44,6 +44,7 @@ public class ChannelService {
         Channel channel = Channel.builder()
                 .youtubeChannelId(channelCreateDto.getYoutubeChannelId())
                 .channelTitle(channelCreateDto.getChannelTitle())
+                .thumbnail(channelCreateDto.getThumbnail())
                 .member(member)
                 .build();
         return channelRepository.save(channel).getId();

@@ -33,11 +33,13 @@ public class ChannelController {
         JsonNode channelItem = channelResource.get("items").get(0);
         String youtubeChannelId = channelItem.get("id").asText();
         String channelTitle = channelItem.get("snippet").get("title").asText();
+        String thumbnail = channelItem.get("snippet").get("thumbnails").get("default").get("url").asText();
 
         return ChannelCreateDto.builder()
                 .youtubeChannelId(youtubeChannelId)
                 .channelTitle(channelTitle)
                 .memberId(memberId)
+                .thumbnail(thumbnail)
                 .build();
     }
 
