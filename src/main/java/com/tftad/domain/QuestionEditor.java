@@ -17,7 +17,8 @@ public class QuestionEditor {
     public static class QuestionEditorBuilder {
         private String authorIntention;
 
-        QuestionEditorBuilder() {}
+        QuestionEditorBuilder() {
+        }
 
         public QuestionEditorBuilder authorIntention(String authorIntention) {
             if (authorIntention != null) {

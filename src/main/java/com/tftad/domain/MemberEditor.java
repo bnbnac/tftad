@@ -21,7 +21,8 @@ public class MemberEditor {
         private String name;
         private String password;
 
-        MemberEditorBuilder() {}
+        MemberEditorBuilder() {
+        }
 
         public MemberEditorBuilder name(String name) {
             if (name != null) {

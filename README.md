@@ -3,6 +3,7 @@
 ---
 
 ## response NPE 처리!!!!
+
 ### extractor service좀 어떻게 해봐...
 
 - unpub post edit transaction. edit중에 extractor가 껴들면어캄?
@@ -21,7 +22,7 @@
 - channel 이 다른사용자에게 등록된 경우 처리(일단 막아놓음)
 - oauth가 아닌 다른 경로로 channel을 추가할수있는지
 - 채널이 브랜드채널이면 주기적 확인(브랜딩 권한은 변하는거니까)
-  - 근데 애초에 채널을 등록해놓는게 위험한건가?
+    - 근데 애초에 채널을 등록해놓는게 위험한건가?
 - 컷 누락 제보기능 - 포인트 차감 환급
 - oauth 관련 api 문서좀 읽고 v3impl 이런식으로
 - postservice.validatePostInExtractorCompletion returns enum

@@ -30,7 +30,7 @@ public class QuestionController {
 
     @PatchMapping("/questions/{questionId}")
     public QuestionResponse edit(AuthenticatedMember authenticatedMember, @PathVariable Long questionId,
-            @RequestBody QuestionEdit questionEdit) {
+                                 @RequestBody QuestionEdit questionEdit) {
 
         QuestionEditDto questionEditDto = questionEdit.toQuestionEditDtoBuilder()
                 .memberId(authenticatedMember.getId())

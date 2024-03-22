@@ -2,7 +2,6 @@ package com.tftad.response;
 
 import com.tftad.domain.Question;
 import lombok.Getter;
-import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
 
@@ -18,13 +17,6 @@ public class QuestionResponse {
     private final LocalDateTime updatedAt;
 
     public QuestionResponse(Question question) {
-        Assert.notNull(question, "question must not be null");
-        Assert.notNull(question.getId(), "id must not be null");
-        Assert.hasText(question.getStartTime(), "start time must not be null");
-        Assert.hasText(question.getEndTime(), "end time must not be null");
-        Assert.notNull(question.getCreatedAt(), "created time must not be null");
-        Assert.notNull(question.getUpdatedAt(), "updated time must not be null");
-
         this.id = question.getId();
         this.authorIntention = question.getAuthorIntention();
         this.startTimeOnSecond = question.getStartTimeOnSecond();

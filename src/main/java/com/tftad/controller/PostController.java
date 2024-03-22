@@ -82,7 +82,7 @@ public class PostController {
 
     @PatchMapping("/posts/{postId}")
     public PostResponse edit(AuthenticatedMember authenticatedMember, @PathVariable Long postId,
-            @RequestBody PostEdit postEdit) {
+                             @RequestBody PostEdit postEdit) {
 
         PostEditDto postEditDto = postEdit.toPostEditDtoBuilder()
                 .memberId(authenticatedMember.getId())
