@@ -7,10 +7,7 @@ import com.tftad.domain.ChannelCreateDto;
 import com.tftad.service.ChannelService;
 import com.tftad.service.OAuthService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,6 +38,16 @@ public class ChannelController {
                 .memberId(memberId)
                 .thumbnail(thumbnail)
                 .build();
+    }
+
+    @PostMapping("/channels/direct")
+    public Long addChannelDirectly(AuthenticatedMember authenticatedMember, @RequestParam String code) {
+        String accessToken = oAuthService.queryAccessToken(code);
+        JsonNode channelResource = oAuthService.queryChannelResource(accessToken);
+
+        ChannelCreateDto channelCreateDto = createChannelCreateDto(authenticatedMember.getId(), channelResource);
+        channelService.validateAddedChannel(channelCreateDto.getYoutubeChannelId());
+        return channelService.saveChannel(channelCreateDto);
     }
 
     @DeleteMapping("/channels/{channelId}")

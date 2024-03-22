@@ -32,5 +32,6 @@
 - comment 기능정도는 넣어줘야 rdb를 쓰는 보람이 있는거같다
 - 결국 세션db가 필요하다? logout deleteMember
 - member edit delete는 더 강한 인증필요?
+- nohup log
 
  
