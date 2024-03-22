@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,10 @@ public class Post {
 
     private Boolean published = false;
 
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
     @Lob
     private String content;
 
@@ -54,6 +59,8 @@ public class Post {
         this.title = title;
         this.content = content;
         this.videoId = videoId;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
         changeMember(member);
         changeChannel(channel);
     }
@@ -67,6 +74,7 @@ public class Post {
     public void edit(PostEditor postEditor) {
         this.title = postEditor.getTitle();
         this.content = postEditor.getContent();
+        this.updatedAt = LocalDateTime.now();
     }
 
     private void changeMember(Member member) {

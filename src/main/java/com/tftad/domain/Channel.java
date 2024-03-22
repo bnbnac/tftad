@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +31,10 @@ public class Channel {
 
     private String thumbnail;
 
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
     @OneToMany(mappedBy = "channel")
     private List<Post> posts = new ArrayList<>();
 
@@ -43,6 +48,8 @@ public class Channel {
         this.channelTitle = channelTitle;
         this.youtubeChannelId = youtubeChannelId;
         this.thumbnail = thumbnail;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
         changeMember(member);
     }
 

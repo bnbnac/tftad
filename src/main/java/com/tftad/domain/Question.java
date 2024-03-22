@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,6 +29,10 @@ public class Question {
 
     private String endTime;
 
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
     @Builder
     public Question(String startTime, String endTime, Post post, String authorIntention) {
         Assert.hasText(startTime, "startTime must not be null");
@@ -36,6 +42,8 @@ public class Question {
         this.startTime = startTime;
         this.endTime = endTime;
         this.authorIntention = authorIntention;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
         changePost(post);
     }
 
@@ -76,5 +84,6 @@ public class Question {
 
     public void edit(QuestionEditor questionEditor) {
         this.authorIntention = questionEditor.getAuthorIntention();
+        this.updatedAt = LocalDateTime.now();
     }
 }

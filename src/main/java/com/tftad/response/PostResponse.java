@@ -4,6 +4,8 @@ import com.tftad.domain.Post;
 import lombok.Getter;
 import org.springframework.util.Assert;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class PostResponse {
 
@@ -15,6 +17,8 @@ public class PostResponse {
     private final String content;
     private final Boolean published;
     private final String videoUrl;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
 
     public PostResponse(Post post) {
         Assert.notNull(post, "post must not be null");
@@ -23,11 +27,15 @@ public class PostResponse {
         Assert.hasText(post.getContent(), "content must not be null");
         Assert.notNull(post.getPublished(), "published must not be null");
         Assert.hasText(post.getVideoId(), "videoId must not be null");
+        Assert.notNull(post.getCreatedAt(), "created time must not be null");
+        Assert.notNull(post.getUpdatedAt(), "updated time must not be null");
 
         this.id = post.getId();
         this.title = post.generateLimitedTitle(MAX_TITLE_LENGTH);
         this.content = post.generateLimitedContent(MAX_CONTENT_LENGTH);
         this.published = post.getPublished();
         this.videoUrl = post.generateYoutubeVideoUrl();
+        this.createdAt = post.getCreatedAt();
+        this.updatedAt = post.getUpdatedAt();
     }
 }

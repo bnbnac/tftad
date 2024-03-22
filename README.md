@@ -33,5 +33,6 @@
 - 결국 세션db가 필요하다? logout deleteMember
 - member edit delete는 더 강한 인증필요?
 - nohup log
+- 일정시간이 지나면 channel이 삭제되는 로직
 
  

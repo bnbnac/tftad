@@ -29,6 +29,8 @@ public class Member {
 
     private LocalDateTime createdAt;
 
+    private LocalDateTime updatedAt;
+
     @OneToMany(mappedBy = "member")
     private List<Channel> channels = new ArrayList<>();
 
@@ -45,6 +47,7 @@ public class Member {
         this.name = name;
         this.password = password;
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public MemberEditor.MemberEditorBuilder toEditorBuilder() {
@@ -56,5 +59,6 @@ public class Member {
     public void edit(MemberEditor memberEditor) {
         this.name = memberEditor.getName();
         this.password = memberEditor.getPassword();
+        this.updatedAt = LocalDateTime.now();
     }
 }

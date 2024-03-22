@@ -4,6 +4,8 @@ import com.tftad.domain.Question;
 import lombok.Getter;
 import org.springframework.util.Assert;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class QuestionResponse {
 
@@ -12,17 +14,23 @@ public class QuestionResponse {
     private final Integer startTimeOnSecond;
     private final Integer endTimeOnSecond;
     private final String filename;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
 
     public QuestionResponse(Question question) {
         Assert.notNull(question, "question must not be null");
         Assert.notNull(question.getId(), "id must not be null");
         Assert.hasText(question.getStartTime(), "start time must not be null");
         Assert.hasText(question.getEndTime(), "end time must not be null");
+        Assert.notNull(question.getCreatedAt(), "created time must not be null");
+        Assert.notNull(question.getUpdatedAt(), "updated time must not be null");
 
         this.id = question.getId();
         this.authorIntention = question.getAuthorIntention();
         this.startTimeOnSecond = question.getStartTimeOnSecond();
         this.endTimeOnSecond = question.getEndTimeOnSecond();
         this.filename = question.generateFilename();
+        this.createdAt = question.getCreatedAt();
+        this.updatedAt = question.getUpdatedAt();
     }
 }
