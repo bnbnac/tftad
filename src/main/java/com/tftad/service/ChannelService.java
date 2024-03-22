@@ -52,4 +52,14 @@ public class ChannelService {
     public Channel getChannelById(Long channelId) {
         return channelRepository.findById(channelId).orElseThrow(ChannelNotFound::new);
     }
+
+    @Transactional
+    public void delete(Long memberId, Long channelId) {
+        Channel channel = channelRepository.findById(channelId).orElseThrow(ChannelNotFound::new);
+
+        if (!memberId.equals(channel.getMember().getId())) {
+            throw new InvalidRequest("channel", "채널 소유자만 채널을 삭제할 수 있습니다");
+        }
+        channelRepository.delete(channel);
+    }
 }

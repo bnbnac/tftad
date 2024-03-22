@@ -1,11 +1,14 @@
 package com.tftad.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.data.OAuthedMember;
 import com.tftad.domain.ChannelCreateDto;
 import com.tftad.service.ChannelService;
 import com.tftad.service.OAuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,5 +39,10 @@ public class ChannelController {
                 .channelTitle(channelTitle)
                 .memberId(memberId)
                 .build();
+    }
+
+    @DeleteMapping("/channels/{channelId}")
+    public void delete(AuthenticatedMember authenticatedMember, @PathVariable Long channelId) {
+        channelService.delete(authenticatedMember.getId(), channelId);
     }
 }

@@ -28,7 +28,7 @@ public class MemberController {
     }
 
     @PatchMapping("members/{memberId}")
-    public MemberResponse edit(AuthenticatedMember authenticatedMember, MemberEdit memberEdit) {
+    public MemberResponse edit(AuthenticatedMember authenticatedMember, @RequestBody MemberEdit memberEdit) {
         MemberEditDto memberEditDto = memberEdit.toMemberEditDtoBuilder()
                 .memberId(authenticatedMember.getId())
                 .build();
