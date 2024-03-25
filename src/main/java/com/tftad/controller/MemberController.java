@@ -29,7 +29,7 @@ public class MemberController {
     }
 
     @PatchMapping("members/{memberId}")
-    public MemberResponse edit(AuthenticatedMember authenticatedMember,
+    public void edit(AuthenticatedMember authenticatedMember,
                                @RequestBody MemberEdit memberEdit, @PathVariable Long memberId) {
         if (!authenticatedMember.getId().equals(memberId)) {
             throw new InvalidRequest("memberId", "본인의 정보만 수정할 수 있습니다");
@@ -37,6 +37,6 @@ public class MemberController {
         MemberEditDto memberEditDto = memberEdit.toMemberEditDtoBuilder()
                 .memberId(authenticatedMember.getId())
                 .build();
-        return memberService.edit(memberEditDto);
+        memberService.edit(memberEditDto);
     }
 }

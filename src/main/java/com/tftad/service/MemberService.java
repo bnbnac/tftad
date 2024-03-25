@@ -28,7 +28,7 @@ public class MemberService {
     }
 
     @Transactional
-    public MemberResponse edit(MemberEditDto memberEditDto) {
+    public void edit(MemberEditDto memberEditDto) {
         Member member = memberRepository.findById(memberEditDto.getMemberId()).orElseThrow(MemberNotFound::new);
 
         String password = null;
@@ -42,7 +42,5 @@ public class MemberService {
                 .build();
         member.edit(memberEditor);
         memberRepository.save(member);
-
-        return new MemberResponse(member);
     }
 }

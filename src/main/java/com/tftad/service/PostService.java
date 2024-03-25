@@ -82,8 +82,6 @@ public class PostService {
                 .build();
         post.edit(postEditor);
         postRepository.save(post);
-
-        return new PostResponse(post);
     }
 
     @Transactional

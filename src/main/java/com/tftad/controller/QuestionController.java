@@ -5,7 +5,6 @@ import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.QuestionDeleteDto;
 import com.tftad.domain.QuestionEditDto;
 import com.tftad.request.QuestionEdit;
-import com.tftad.response.QuestionResponse;
 import com.tftad.service.ExtractorService;
 import com.tftad.service.QuestionService;
 import lombok.RequiredArgsConstructor;
@@ -29,13 +28,13 @@ public class QuestionController {
     }
 
     @PatchMapping("/questions/{questionId}")
-    public QuestionResponse edit(AuthenticatedMember authenticatedMember, @PathVariable Long questionId,
+    public void edit(AuthenticatedMember authenticatedMember, @PathVariable Long questionId,
                                  @RequestBody QuestionEdit questionEdit) {
 
         QuestionEditDto questionEditDto = questionEdit.toQuestionEditDtoBuilder()
                 .memberId(authenticatedMember.getId())
                 .questionId(questionId)
                 .build();
-        return questionService.edit(questionEditDto);
+        questionService.edit(questionEditDto);
     }
 }

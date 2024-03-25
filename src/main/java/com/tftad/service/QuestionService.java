@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +57,7 @@ public class QuestionService {
     }
 
     @Transactional
-    public QuestionResponse edit(QuestionEditDto questionEditDto) {
+    public void edit(QuestionEditDto questionEditDto) {
         Question question = questionRepository.findById(questionEditDto.getQuestionId())
                 .orElseThrow(QuestionNotFound::new);
         if (!questionEditDto.getMemberId().equals(question.getPost().getMember().getId())) {
@@ -68,8 +69,6 @@ public class QuestionService {
                 .build();
         question.edit(questionEditor);
         questionRepository.save(question);
-
-        return new QuestionResponse(question);
     }
 
     @Transactional
