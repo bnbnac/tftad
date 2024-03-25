@@ -7,15 +7,18 @@ import lombok.Getter;
 @Getter
 public class QuestionEdit {
 
+    private Long questionId;
     private String authorIntention;
 
     @Builder
-    public QuestionEdit(String authorIntention) {
+    public QuestionEdit(Long questionId, String authorIntention) {
+        this.questionId = questionId;
         this.authorIntention = authorIntention;
     }
 
     public QuestionEditDto.QuestionEditDtoBuilder toQuestionEditDtoBuilder() {
         return QuestionEditDto.builder()
+                .questionId(questionId)
                 .authorIntention(authorIntention);
     }
 }
