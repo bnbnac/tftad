@@ -63,7 +63,14 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse edit(PostEditDto postEditDto) {
+    public List<PostResponse> getPostListOfMember(Long memberId, PostSearch postSearch) {
+        return postRepository.getListOfMember(memberId, postSearch).stream()
+                .map(PostResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void edit(PostEditDto postEditDto) {
         Post post = postRepository.findById(postEditDto.getPostId()).orElseThrow(PostNotFound::new);
         if (!postEditDto.getMemberId().equals(post.getMember().getId())) {
             throw new InvalidRequest("memberId", "소유자만 게시글을 수정할 수 있습니다");

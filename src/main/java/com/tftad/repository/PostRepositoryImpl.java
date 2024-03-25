@@ -22,4 +22,14 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .orderBy(post.id.desc())
                 .fetch();
     }
+
+    @Override
+    public List<Post> getListOfMember(Long memberId, PostSearch postSearch) {
+        return jpaQueryFactory.selectFrom(post)
+                .where(post.member.id.eq(memberId))
+                .limit(postSearch.getSize())
+                .offset(postSearch.getOffset())
+                .orderBy(post.id.desc())
+                .fetch();
+    }
 }
