@@ -1,8 +1,10 @@
 package com.tftad.response;
 
 import com.tftad.domain.Post;
+import com.tftad.domain.Question;
 import lombok.Getter;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +19,7 @@ public class PostResponseDetail {
         this.post = new PostResponse(post);
         this.questions = post.getQuestions()
                 .stream()
+                .sorted(Comparator.comparing(Question::getStartTime))
                 .map(QuestionResponse::new)
                 .collect(Collectors.toList());
         this.channel = new ChannelResponse(post.getChannel());
