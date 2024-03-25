@@ -71,4 +71,12 @@ public class QuestionService {
 
         return new QuestionResponse(question);
     }
+
+    @Transactional
+    public List<QuestionResponse> getQuestionListOfPost(Long postId) {
+        return questionRepository.findByPostIdOrderByStartTimeAsc(postId)
+                .stream()
+                .map(QuestionResponse::new)
+                .collect(Collectors.toList());
+    }
 }

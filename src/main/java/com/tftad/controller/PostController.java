@@ -80,6 +80,16 @@ public class PostController {
         return postService.getList(postSearch);
     }
 
+    @GetMapping("/posts/my")
+    public List<PostResponse> getList(AuthenticatedMember authenticatedMember, @ModelAttribute PostSearch postSearch) {
+        return postService.getPostListOfMember(authenticatedMember.getId(), postSearch);
+    }
+
+    @GetMapping("/posts/{postId}/questions")
+    public List<QuestionResponse> getQuestionList(@PathVariable Long postId) {
+        return questionService.getQuestionListOfPost(postId);
+    }
+
     @PatchMapping("/posts/{postId}")
     public PostResponse edit(AuthenticatedMember authenticatedMember, @PathVariable Long postId,
                              @RequestBody PostEdit postEdit) {
