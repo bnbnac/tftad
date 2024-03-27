@@ -3,11 +3,14 @@ package com.tftad.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.data.OAuthedMember;
+import com.tftad.domain.Channel;
 import com.tftad.domain.ChannelCreateDto;
 import com.tftad.service.ChannelService;
 import com.tftad.service.OAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,12 +21,7 @@ public class ChannelController {
 
     @PostMapping("/channels")
     public Long addChannel(OAuthedMember oAuthedMember) {
-        String accessToken = oAuthService.queryAccessToken(oAuthedMember.getAuthorizationCode());
-        JsonNode channelResource = oAuthService.queryChannelResource(accessToken);
-
-        ChannelCreateDto channelCreateDto = createChannelCreateDto(oAuthedMember.getId(), channelResource);
-        channelService.validateAddedChannel(channelCreateDto.getYoutubeChannelId());
-        return channelService.saveChannel(channelCreateDto);
+        return processChannelAddition(oAuthedMember.getId(), oAuthedMember.getAuthorizationCode());
     }
 
     private ChannelCreateDto createChannelCreateDto(Long memberId, JsonNode channelResource) {
@@ -40,14 +38,23 @@ public class ChannelController {
                 .build();
     }
 
-    @PostMapping("/channels/direct")
-    public Long addChannelDirectly(AuthenticatedMember authenticatedMember, @RequestParam String code) {
+    private Long processChannelAddition(Long memberId, String code) {
         String accessToken = oAuthService.queryAccessToken(code);
         JsonNode channelResource = oAuthService.queryChannelResource(accessToken);
 
-        ChannelCreateDto channelCreateDto = createChannelCreateDto(authenticatedMember.getId(), channelResource);
-        channelService.validateAddedChannel(channelCreateDto.getYoutubeChannelId());
+        ChannelCreateDto channelCreateDto = createChannelCreateDto(memberId, channelResource);
+        Optional<Channel> deletedChannel = channelService
+                .validateDeletedChannel(channelCreateDto.getYoutubeChannelId());
+
+        if (deletedChannel.isPresent()) {
+            return channelService.inherit(deletedChannel.get(), memberId);
+        }
         return channelService.saveChannel(channelCreateDto);
+    }
+
+    @PostMapping("/channels/direct")
+    public Long addChannelDirectly(AuthenticatedMember authenticatedMember, @RequestParam String code) {
+        return processChannelAddition(authenticatedMember.getId(), code);
     }
 
     @DeleteMapping("/channels/{channelId}")

@@ -3,6 +3,7 @@ package com.tftad.service;
 import com.tftad.domain.Member;
 import com.tftad.domain.MemberEditDto;
 import com.tftad.domain.MemberEditor;
+import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.MemberNotFound;
 import com.tftad.repository.MemberRepository;
 import com.tftad.response.MemberResponse;
@@ -42,5 +43,11 @@ public class MemberService {
                 .build();
         member.edit(memberEditor);
         memberRepository.save(member);
+    }
+
+    public Member getDeletedMember() {
+        return memberRepository.findById(-1L)
+                .orElseThrow(() -> new InvalidRequest("memberId", "no member with id -1")
+        );
     }
 }

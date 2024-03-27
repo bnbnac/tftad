@@ -60,4 +60,12 @@ public class Channel {
         this.member = member;
         member.getChannels().add(this);
     }
+
+    public void delete(Member DELETED_MEMBER) {
+        this.member = DELETED_MEMBER;
+    }
+
+    public void inherit(Member inheritedMember) {
+        this.member = inheritedMember;
+    }
 }

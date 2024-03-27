@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class ChannelService {
@@ -17,13 +19,24 @@ public class ChannelService {
     private final ChannelRepository channelRepository;
     private final MemberService memberService;
 
-    public void validateAddedChannel(String youtubeChannelId) {
-        channelRepository.findByYoutubeChannelId(youtubeChannelId)
-                .ifPresent(c -> {
-                    throw new InvalidRequest(
-                            "youtubeChannelId", "이미 등록된 채널입니다. channelId: " + c.getId()
-                    );
-                });
+    public Optional<Channel> validateDeletedChannel(String youtubeChannelId) {
+        Optional<Channel> channelOptional = channelRepository.findByYoutubeChannelId(youtubeChannelId);
+        if (channelOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        validateChannelOwner(channelOptional.get());
+        return channelOptional;
+    }
+
+    private void validateChannelOwner(Channel channel) {
+        Long ownerId = channel.getMember().getId();
+        if (!ownerId.equals(-1L)) {
+            throw new InvalidRequest(
+                    "youtubeChannelId",
+                    "이미 등록된 채널입니다. member id: " + ownerId
+            );
+        }
     }
 
     public Long validateChannelOwner(Long memberId, String youtubeChannelId) {
@@ -31,7 +44,8 @@ public class ChannelService {
 
         if (!memberId.equals(channel.getMember().getId())) {
             throw new InvalidRequest(
-                    "youtubeChannelId", "계정에 유튜브 채널을 등록해주세요. channelId: " + youtubeChannelId
+                    "youtubeChannelId",
+                    "계정에 유튜브 채널을 등록해주세요. youtube channel id: " + youtubeChannelId
             );
         }
         return channel.getId();
@@ -61,6 +75,15 @@ public class ChannelService {
         if (!memberId.equals(channel.getMember().getId())) {
             throw new InvalidRequest("channel", "채널 소유자만 채널을 삭제할 수 있습니다");
         }
-        channelRepository.delete(channel);
+
+        Member DELETED_MEMBER = memberService.getDeletedMember();
+        channel.delete(DELETED_MEMBER);
+        channelRepository.save(channel);
+    }
+
+    public Long inherit(Channel deletedChannel, Long memberId) {
+        deletedChannel.inherit(memberService.getMemberById(memberId));
+        channelRepository.save(deletedChannel);
+        return deletedChannel.getId();
     }
 }
