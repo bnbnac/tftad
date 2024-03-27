@@ -41,6 +41,10 @@ public class ExtractorServiceImpl implements ExtractorService {
         String totalFrame = response.getBody().get("totalFrame").asText();
         String state = response.getBody().get("state").asText();
 
+        if (!String.valueOf(postId).equals(curPostId)) {
+            return PositionOfPostResponse.builder().state("waiting").build();
+        }
+
         return PositionOfPostResponse.builder()
                 .curPosition(String.valueOf(curPosition))
                 .initialPosition(String.valueOf(initialPosition))

@@ -7,9 +7,6 @@ public class InvalidRequest extends TftadException {
 
     private static final String MESSAGE = "잘못된 요청입니다";
 
-    private String field;
-    private String message;
-
     public InvalidRequest() {
         super(MESSAGE);
     }

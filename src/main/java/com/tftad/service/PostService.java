@@ -107,6 +107,7 @@ public class PostService {
         postRepository.save(post);
     }
 
+    @Transactional
     public void validatePostedVideo(PostCreateDto postCreateDto) {
         postRepository.findByVideoId(postCreateDto.getVideoId())
                 .ifPresent(p -> {
