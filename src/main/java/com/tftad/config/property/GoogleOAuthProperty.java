@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 @ConfigurationProperties(prefix = "oauth.google")
 public class GoogleOAuthProperty {
+    public static final int MAX_VIDEO_DURATION_MINUTES = 180;
 
     private String clientId;
     private String clientSecret;

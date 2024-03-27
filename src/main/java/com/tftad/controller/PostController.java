@@ -38,7 +38,9 @@ public class PostController {
     @PostMapping("/posts")
     public Long post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
         PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember, postCreate);
-        String youtubeChannelId = oAuthService.queryVideoResourceToGetChannelId(postCreateDto.getVideoId());
+        JsonNode videoResource = oAuthService.queryVideoResource(postCreateDto.getVideoId());
+
+        String youtubeChannelId = oAuthService.validateVideoAndGetYoutubeChannelId(videoResource);
         Long channelId = channelService.validateChannelOwner(postCreateDto.getMemberId(), youtubeChannelId);
 
         postService.validatePostedVideo(postCreateDto);
