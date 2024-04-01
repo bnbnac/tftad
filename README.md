@@ -17,8 +17,23 @@
 - 게시글 작성 시 관련 정보를 [추출 서버](https://github.com/bnbnac/augment-extractor)로 전송합니다. 이후 [추출 서버](https://github.com/bnbnac/augment-extractor)로부터 완료 정보를 받습니다.
 
 ## 캡처
+TFT 플레이 유튜브 영상 주소 복사
 <img src="https://github.com/bnbnac/tftad/assets/100001092/a6986320-d025-4eee-a8a4-a27e8165a628" />
+
+채널 추가(OAuth)
 <img src="https://github.com/bnbnac/tftad/assets/100001092/8f8c95fb-2327-470e-8165-3f2fe83402ca" />
+
+업로드
 <img src="https://github.com/bnbnac/tftad/assets/100001092/f791521f-9bff-4391-bb37-521349385f42" />
+
+증강체 선택 장면 추출됨
 <img src="https://github.com/bnbnac/tftad/assets/100001092/9d102391-9759-4030-8b4b-24cf1b0a1482" />
-<video src="https://youtu.be/SJuzTF7wmV0?si=6RUnXBFNHhqbCrin"></video>
+
+채널 삭제
+<img src="https://github.com/bnbnac/tftad/assets/100001092/73b4b18e-2ff9-4142-8d85-a399926458ab" />
+<img src="https://github.com/bnbnac/tftad/assets/100001092/ed92d447-da20-49c6-b026-bb60c2900bb5" />
+
+삭제한 채널을 다른 계정에 추가
+<img src="https://github.com/bnbnac/tftad/assets/100001092/be745cf5-2f65-4d0d-804c-cb1e40c1851d" />
+<img src="https://github.com/bnbnac/tftad/assets/100001092/f5ece8d4-78e9-4a0a-8a8d-6b5b1c65df65" />
+<img src="https://github.com/bnbnac/tftad/assets/100001092/98db64c0-ecb7-4883-89a8-fb464c949865" />
