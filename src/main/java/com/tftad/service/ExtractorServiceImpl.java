@@ -42,7 +42,11 @@ public class ExtractorServiceImpl implements ExtractorService {
         String state = response.getBody().get("state").asText();
 
         if (!String.valueOf(postId).equals(curPostId)) {
-            return PositionOfPostResponse.builder().state("waiting").build();
+            return PositionOfPostResponse.builder()
+                    .state("waiting")
+                    .curPosition(String.valueOf(curPosition))
+                    .initialPosition(String.valueOf(initialPosition))
+                    .build();
         }
 
         return PositionOfPostResponse.builder()

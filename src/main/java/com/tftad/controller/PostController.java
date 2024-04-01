@@ -38,12 +38,13 @@ public class PostController {
     @PostMapping("/posts")
     public Long post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
         PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember, postCreate);
-        JsonNode videoResource = oAuthService.queryVideoResource(postCreateDto.getVideoId());
-
-        String youtubeChannelId = oAuthService.validateVideoAndGetYoutubeChannelId(videoResource);
-        Long channelId = channelService.validateChannelOwner(postCreateDto.getMemberId(), youtubeChannelId);
-
         postService.validatePostedVideo(postCreateDto);
+
+        JsonNode videoResource = oAuthService.queryVideoResource(postCreateDto.getVideoId());
+        String youtubeChannelId = oAuthService.validateVideoAndGetYoutubeChannelId(videoResource);
+
+        Long channelId = channelService.validateChannelOwnerByYoutubeChannelId(
+                postCreateDto.getMemberId(), youtubeChannelId);
         Long postId = postService.savePost(postCreateDto, channelId);
 
         queryToExtractor(postCreateDto.getVideoId(), postCreateDto.getMemberId(), postId);
@@ -52,7 +53,6 @@ public class PostController {
 
     private PostCreateDto createPostCreateDto(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
         String videoId = extractVideoId(postCreate.getVideoUrl());
-
         return postCreate.toPostCreateDtoBuilder()
                 .memberId(authenticatedMember.getId())
                 .videoId(videoId)
@@ -111,7 +111,6 @@ public class PostController {
                         .memberId(memberId)
                         .build())
                 .toList();
-
         questionEditDtoList.forEach(questionService::edit);
     }
 
