@@ -137,4 +137,24 @@ public class PostService {
     public Post getPostById(Long postId) {
         return postRepository.findById(postId).orElseThrow(PostNotFound::new);
     }
+
+    @Transactional
+    public void deleteChannel(Long channelId) {
+        Member DELETED_MEMBER = memberService.getDeletedMember();
+
+        List<Post> posts = postRepository.findByChannelId(channelId);
+        for (Post post : posts) {
+            post.delete(DELETED_MEMBER);
+            postRepository.save(post);
+        }
+    }
+
+    @Transactional
+    public void inheritChannel(Long channelId, Long memberId) {
+        List<Post> posts = postRepository.findByChannelId(channelId);
+        for (Post post : posts) {
+            post.inherit(memberService.getMemberById(memberId));
+            postRepository.save(post);
+        }
+    }
 }

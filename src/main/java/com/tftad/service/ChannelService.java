@@ -10,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class ChannelService {
@@ -19,17 +17,11 @@ public class ChannelService {
     private final ChannelRepository channelRepository;
     private final MemberService memberService;
 
-    public Optional<Channel> validateDeletedChannel(String youtubeChannelId) {
-        Optional<Channel> channelOptional = channelRepository.findByYoutubeChannelId(youtubeChannelId);
-        if (channelOptional.isEmpty()) {
-            return Optional.empty();
-        }
-
-        validateChannelOwner(channelOptional.get());
-        return channelOptional;
+    public boolean isNewChannel(ChannelCreateDto channelCreateDto) {
+        return channelRepository.findByYoutubeChannelId(channelCreateDto.getYoutubeChannelId()).isEmpty();
     }
 
-    private void validateChannelOwner(Channel channel) {
+    private void validateChannelOwnerByYoutubeChannelId(Channel channel) {
         Long ownerId = channel.getMember().getId();
         if (!ownerId.equals(-1L)) {
             throw new InvalidRequest(
@@ -39,7 +31,7 @@ public class ChannelService {
         }
     }
 
-    public Long validateChannelOwner(Long memberId, String youtubeChannelId) {
+    public Long validateChannelOwnerByYoutubeChannelId(Long memberId, String youtubeChannelId) {
         Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
 
         if (!memberId.equals(channel.getMember().getId())) {
@@ -49,6 +41,17 @@ public class ChannelService {
             );
         }
         return channel.getId();
+    }
+
+    public void validateChannelOwnerByChannelId(Long memberId, Long channelId) {
+        Channel channel = channelRepository.findById(channelId).orElseThrow(ChannelNotFound::new);
+
+        if (!memberId.equals(channel.getMember().getId())) {
+            throw new InvalidRequest(
+                    "youtubeChannelId",
+                    "계정에 유튜브 채널을 등록해주세요. channel id: " + channelId
+            );
+        }
     }
 
     @Transactional
@@ -69,21 +72,31 @@ public class ChannelService {
     }
 
     @Transactional
-    public void delete(Long memberId, Long channelId) {
+    public void delete(Long channelId) {
         Channel channel = channelRepository.findById(channelId).orElseThrow(ChannelNotFound::new);
-
-        if (!memberId.equals(channel.getMember().getId())) {
-            throw new InvalidRequest("channel", "채널 소유자만 채널을 삭제할 수 있습니다");
-        }
-
         Member DELETED_MEMBER = memberService.getDeletedMember();
+
         channel.delete(DELETED_MEMBER);
         channelRepository.save(channel);
     }
 
-    public Long inherit(Channel deletedChannel, Long memberId) {
-        deletedChannel.inherit(memberService.getMemberById(memberId));
-        channelRepository.save(deletedChannel);
-        return deletedChannel.getId();
+    @Transactional
+    public Long inherit(Long channelId, Long memberId) {
+        Channel channel = channelRepository.findById(channelId).orElseThrow(ChannelNotFound::new);
+        channel.inherit(memberService.getMemberById(memberId));
+        channelRepository.save(channel);
+        return channel.getId();
+    }
+
+    public Long validateDeletedChannel(ChannelCreateDto channelCreateDto) {
+        Channel existChannel = channelRepository.findByYoutubeChannelId(channelCreateDto.getYoutubeChannelId())
+                .orElseThrow(ChannelNotFound::new);
+        if (!existChannel.getMember().getId().equals(-1L)) {
+            throw new InvalidRequest(
+                    "youtubeChannelId",
+                    "이미 등록된 채널입니다. member id: " + existChannel.getMember().getId()
+            );
+        }
+        return existChannel.getId();
     }
 }

@@ -1,39 +1,18 @@
-# TODO
+# TFTAD
 
----
+[tftad.com](https://tftad.com)은
+온라인게임 [Team-Fight-Tactics(전략적 팀 전투, 롤토체스)](https://teamfighttactics.leagueoflegends.com/) 요소 중 하나인 증강체 선택 관련 웹사이트입니다.
+유튜브 크리에이터는 이곳에 본인의 플레이 영상을 게시할 수 있습니다. 영상에서 증강체 선택 장면이 추출되어 게시됩니다.
 
-## response NPE 처리!!!!
 
-### extractor service좀 어떻게 해봐...
+## 기술
 
-- unpub post edit transaction. edit중에 extractor가 껴들면어캄?
-- 리스트조회: 일반조회 unpublish 개수만큼 더 퍼와야하는데 이거처리메소드?
-- showPost가 필요한가? published가 필요한가?
-- 근데 getPosition은 postRepo를 계속 쓰는데 이걸로 구현하는게 맞나
-- post가 channel을 가지면 편한가
-- 비번변경용 비번클래스 나누기
-- extractor로 나가는 reqdto를 만들자 특히 뭔가 delete할때 서비스에서 컨트롤러로 어떤 dto를 올리고 그걸 변환해서 reqdto를 만들자
-- user input에 대한 보안 orm이 해주나?
+- Spring boot, JPA
 
----
+## 특징
 
-- SSL
-- ssh 키관리
-- channel 이 다른사용자에게 등록된 경우 처리(일단 막아놓음)
-- oauth가 아닌 다른 경로로 channel을 추가할수있는지
-- 채널이 브랜드채널이면 주기적 확인(브랜딩 권한은 변하는거니까)
-    - 근데 애초에 채널을 등록해놓는게 위험한건가?
-- 컷 누락 제보기능 - 포인트 차감 환급
-- oauth 관련 api 문서좀 읽고 v3impl 이런식으로
-- postservice.validatePostInExtractorCompletion returns enum
-- POST /posts 여러 서비스들의 트랜잭션에 대해: 트랜잭션 전파 공부
-- validateExtractorResultOrDeletePost UX 고려 - 바로 지워버리지 말고 언제언제 지워질거다 이런식으로
-- validateChannelOwner 성능테스트 -> 멤버에서 한번 걸러서 찾는거랑ㅇ비교
-- 의존 라이브러리 자동 업데이트?
-- comment 기능정도는 넣어줘야 rdb를 쓰는 보람이 있는거같다
-- 결국 세션db가 필요하다? logout deleteMember
-- member edit delete는 더 강한 인증필요?
-- nohup log
-- 일정시간이 지나면 channel이 삭제되는 로직
-
- 
+- Rest API 서버입니다.
+- OAuth를 이용해 Member에 Channel을 등록합니다.([Blog](https://velog.io/@bnbnac/Google-OAuth%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%98%EC%97%AC-%EC%9C%A0%ED%8A%9C%EB%B8%8C-%EC%B1%84%EB%84%90-%EB%93%B1%EB%A1%9D%ED%95%98%EA%B8%B0))
+- 게시글은 곧 `증강체 선택` 콘텐츠입니다. 따라서 게시글 작성 시 유튜브 영상 주소를 첨부해야 하고, 그 전에 계정에 유튜브 채널을 등록해야 합니다. **비즈니스 구조도** → ([보러가기](https://drive.google.com/file/d/10TQxXs86JlJcG9l03tJL9e7Imm5rXgAT/view?usp=drive_link))([다크모드로 보러가기](https://drive.google.com/file/d/1l3K2C0_6eXKJbfeXUAosnXFnEVY0pFtR/view?usp=drive_link))
+- 게시글 작성 시 관련 정보를 [추출 서버](https://github.com/bnbnac/augment-extractor)로 전송합니다. 이후 [추출 서버](https://github.com/bnbnac/augment-extractor)로부터 완료 정보를 받습니다.
+비즈니스 다이어그램

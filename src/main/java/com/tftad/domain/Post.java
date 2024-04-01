@@ -112,4 +112,12 @@ public class Post {
     public void hide() {
         this.published = false;
     }
+
+    public void delete(Member DELETED_MEMBER) {
+        this.member = DELETED_MEMBER;
+    }
+
+    public void inherit(Member inheritedMember) {
+        this.member = inheritedMember;
+    }
 }
