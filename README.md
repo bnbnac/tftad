@@ -17,13 +17,8 @@
 - 게시글 작성 시 관련 정보를 [추출 서버](https://github.com/bnbnac/augment-extractor)로 전송합니다. 이후 [추출 서버](https://github.com/bnbnac/augment-extractor)로부터 완료 정보를 받습니다.
 
 ## 캡처
-![copy_url](https://drive.google.com/file/d/1xB5AR6DhcBkNjmfogszPnPF8TvPpxI_c/view?usp=drive_link)
-![add_youtube_channel](https://drive.google.com/file/d/1VGV2Rqxp5sTfwzPK1I64Q4YahzhMJL-_/view?usp=drive_link)
-![upload_post](https://drive.google.com/file/d/1fx0-bHobkI9CWK7jzrWjGvPSHA-NeSQH/view?usp=drive_link)
-![questions_extracted](https://drive.google.com/file/d/14_K1UMEmNRGO5VNgya9JP9HS8lEM2beD/view?usp=drive_link)
-
-<img src="https://drive.google.com/file/d/1xB5AR6DhcBkNjmfogszPnPF8TvPpxI_c/view?usp=drive_link" />
-<img src="https://drive.google.com/file/d/1xB5AR6DhcBkNjmfogszPnPF8TvPpxI_c/view?usp=drive_link" />
-<img src="https://drive.google.com/file/d/1xB5AR6DhcBkNjmfogszPnPF8TvPpxI_c/view?usp=drive_link" />
-<img src="https://drive.google.com/file/d/1xB5AR6DhcBkNjmfogszPnPF8TvPpxI_c/view?usp=drive_link" />
-<video src="https://drive.google.com/file/d/14TFhL6Icsntvu_bfKI5FnpgT_U9Hob47/view?usp=drive_link"></video>
+<img src="https://github.com/bnbnac/tftad/assets/100001092/a6986320-d025-4eee-a8a4-a27e8165a628" />
+<img src="https://github.com/bnbnac/tftad/assets/100001092/8f8c95fb-2327-470e-8165-3f2fe83402ca" />
+<img src="https://github.com/bnbnac/tftad/assets/100001092/f791521f-9bff-4391-bb37-521349385f42" />
+<img src="https://github.com/bnbnac/tftad/assets/100001092/9d102391-9759-4030-8b4b-24cf1b0a1482" />
+<video src="https://youtu.be/SJuzTF7wmV0?si=6RUnXBFNHhqbCrin"></video>
