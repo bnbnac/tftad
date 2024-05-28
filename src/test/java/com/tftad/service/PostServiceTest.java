@@ -1,5 +1,6 @@
 package com.tftad.service;
 
+import com.tftad.TestUtility;
 import com.tftad.domain.*;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
@@ -28,6 +29,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class PostServiceTest {
 
     @Autowired
+    private TestUtility testUtility;
+
+    @Autowired
     private PostService postService;
 
     @Autowired
@@ -53,42 +57,36 @@ class PostServiceTest {
         memberRepository.deleteAll();
     }
 
-    Member generateMember(String name, String password, String email) {
-        return Member.builder()
-                .name(name)
-                .password(password)
-                .email(email)
-                .build();
+    Member createMember() {
+        return testUtility.createMember();
     }
 
-    Post generatePost(String content, Member member, String videoId, String title) {
-        return Post.builder()
-                .content(content)
-                .member(member)
-                .videoId(videoId)
-                .title(title)
-                .build();
+    Channel createChannel(Member member) {
+        return testUtility.createChannel(member);
+    }
+
+    Post createPost(Member member, Channel channel) {
+        return testUtility.createPost(member, channel);
     }
 
     @Test
     @DisplayName("post 저장")
     void test1() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long id = memberRepository.save(member).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
+
+        Channel channel = createChannel(member);
+        Long channelId = channel.getId();
 
         PostCreateDto postCreateDto = PostCreateDto.builder()
                 .title("제목")
                 .content("내용")
                 .videoId("videoId")
-                .memberId(id)
+                .memberId(memberId)
                 .build();
 
         // when
-        postService.savePost(postCreateDto);
+        postService.savePost(postCreateDto, channelId);
 
         // then
         assertEquals(1L, postRepository.count());
@@ -101,20 +99,13 @@ class PostServiceTest {
     @Test
     @DisplayName("글 1개 조회")
     void test2() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
+        Long postId = post.getId();
 
         Question question1 = Question.builder()
                 .endTime("111112")
@@ -136,26 +127,24 @@ class PostServiceTest {
 
         // then
         assertNotNull(response);
-        assertEquals("제목", response.getTitle());
-        assertEquals("내용", response.getContent());
-        assertEquals("https://youtu.be/videoId", response.getVideoUrl());
-        assertEquals("내용", response.getContent());
-        assertFalse(response.getPublished());
+        assertEquals("제목", response.getPost().getTitle());
+        assertEquals("내용", response.getPost().getContent());
+        assertEquals("https://youtu.be/videoId", response.getPost().getVideoUrl());
+        assertEquals("내용", response.getPost().getContent());
+        assertFalse(response.getPost().getPublished());
         assertEquals("hello1", response.getQuestions().get(0).getAuthorIntention());
         assertEquals(3600, response.getQuestions().get(0).getStartTimeOnSecond());
         assertEquals("hello2", response.getQuestions().get(1).getAuthorIntention());
-        assertEquals("222222_222223.mp4", response.getQuestions().get(1).getFilename());
+        assertEquals(memberId + "/" + postId + "/" + "222222_222223.mp4",
+                response.getQuestions().get(1).getFilename());
     }
 
     @Test
     @DisplayName("글 1페이지 조회")
     void test3() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
+
+        Channel channel = createChannel(member);
 
         List<Post> requestPosts = IntStream.range(0, 30)
                 .mapToObj(i -> Post.builder()
@@ -163,6 +152,7 @@ class PostServiceTest {
                         .content("내용" + i)
                         .videoId("videoId" + i)
                         .member(member)
+                        .channel(channel)
                         .build())
                 .collect(Collectors.toList());
         postRepository.saveAll(requestPosts);
@@ -182,20 +172,13 @@ class PostServiceTest {
     @Test
     @DisplayName("글 제목만 수정")
     void test4() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
+        Long postId = post.getId();
 
         PostEditDto postEditDto = PostEditDto.builder()
                 .title("수정제목")
@@ -217,20 +200,13 @@ class PostServiceTest {
     @Test
     @DisplayName("글 내용 수정")
     void test5() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
+        Long postId = post.getId();
 
         PostEditDto postEditDto = PostEditDto.builder()
                 .title(null)
@@ -244,7 +220,6 @@ class PostServiceTest {
         Post changedPost = postRepository.findById(post.getId())
                 .orElseThrow(() -> new RuntimeException("글이 존재하지 않습니다. id=" + post.getId()));
 
-
         // then
         assertEquals("제목", changedPost.getTitle());
         assertEquals("수정내용", changedPost.getContent());
@@ -253,24 +228,14 @@ class PostServiceTest {
     @Test
     @DisplayName("글 삭제")
     void test6() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         // when
         postService.delete(member.getId(), post.getId());
-
 
         //then
         assertEquals(0, postRepository.count());
@@ -279,20 +244,11 @@ class PostServiceTest {
     @Test
     @DisplayName("글 1개 조회 - 존재하지 않는 글")
     void test7() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         // when then
         assertThrows(PostNotFound.class, () -> {
@@ -303,20 +259,13 @@ class PostServiceTest {
     @Test
     @DisplayName("글 내용 수정 - 존재하지 않는 글")
     void test8_1() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
+        Long postId = post.getId();
 
         // when
         PostEditDto postEditDto = PostEditDto.builder()
@@ -328,35 +277,23 @@ class PostServiceTest {
         });
     }
 
-
     @Test
     @DisplayName("글 내용 수정 - 작성자가 아닌 멤버")
     void test8_2() {
-        Member member1 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId1 = memberRepository.save(member1).getId();
+        Member member1 = createMember();
+        Long memberId1 = member1.getId();
 
-        Member member2 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId2 = memberRepository.save(member2).getId();
+        Member member2 = createMember();
+        Long memberId2 = member2.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member1)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel1 = createChannel(member1);
+
+        Post post1 = createPost(member1, channel1);
+        Long postId1 = post1.getId();
 
         // when
         PostEditDto postEditDto = PostEditDto.builder()
-                .postId(postId).memberId(memberId2).content("c").title("t").build();
+                .postId(postId1).memberId(memberId2).content("c").title("t").build();
 
         // then
         assertThrows(InvalidRequest.class, () -> {
@@ -367,20 +304,11 @@ class PostServiceTest {
     @Test
     @DisplayName("글 삭제 - 존재하지 않는 글")
     void test9_1() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         // when then
         assertThrows(PostNotFound.class, () -> {
@@ -391,27 +319,16 @@ class PostServiceTest {
     @Test
     @DisplayName("글 삭제 - 작성자가 아닌 멤버")
     void test9_2() {
-        Member member1 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId1 = memberRepository.save(member1).getId();
+        Member member1 = createMember();
+        Long memberId1 = member1.getId();
 
-        Member member2 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId2 = memberRepository.save(member2).getId();
+        Member member2 = createMember();
+        Long memberId2 = member2.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member1)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel1 = createChannel(member1);
+
+        Post post = createPost(member1, channel1);
+        Long postId = post.getId();
 
         // when then
         assertThrows(InvalidRequest.class, () -> {
@@ -422,27 +339,12 @@ class PostServiceTest {
     @Test
     @DisplayName("showPost 테스트")
     void test10() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post1 = Post.builder()
-                .title("제목1")
-                .content("내용1")
-                .videoId("videoId1")
-                .member(member)
-                .build();
-        Post post2 = Post.builder()
-                .title("제목2")
-                .content("내용2")
-                .videoId("videoId2")
-                .member(member)
-                .build();
-        postRepository.save(post1);
-        postRepository.save(post2);
+        Channel channel = createChannel(member);
+
+        Post post1 = createPost(member, channel);
+        Post post2 = createPost(member, channel);
 
         // when
         postService.showPost(post1.getId());
@@ -459,20 +361,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validatePublishedPost 테스트: publish 된 post")
     void test12() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         // when
         postService.showPost(post.getId());
@@ -486,24 +379,13 @@ class PostServiceTest {
     @Test
     @DisplayName("validatePublishedPost 테스트: 존재하지 않는 post")
     void test13() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
+        Channel channel = createChannel(member);
 
-        // when
-        postRepository.save(post);
+        Post post = createPost(member, channel);
 
-        // then
+        // when then
         assertThrows(InvalidRequest.class, () -> {
             postService.validatePublishedPost(post.getId() + 1); //
         });
@@ -512,20 +394,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validatePublishedPost 테스트: unpublished")
     void test14() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         // when then
         assertDoesNotThrow(() -> postService.validatePublishedPost(post.getId()));
@@ -535,20 +408,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validatePostedVideo 테스트: 등록되지 않은 비디오")
     void test15() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
         postService.showPost(post.getId());
 
         PostCreateDto postCreateDto = PostCreateDto.builder()
@@ -565,20 +429,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validatePostedVideo 테스트: 등록된 비디오")
     void test16() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         PostCreateDto postCreateDto = PostCreateDto.builder()
                 .videoId(post.getVideoId())
@@ -594,20 +449,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validateToGetPosition 테스트: 본인 게시글인 경우")
     void test17() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         // when then
         assertDoesNotThrow(() -> postService.validateToGetPosition(member.getId(), post.getId()));
@@ -616,20 +462,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validateToGetPosition 테스트: 본인 게시글이 아닌 경우")
     void test18() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         // when then
         assertThrows(InvalidRequest.class, () -> {
@@ -640,20 +477,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validateExtractorResultOrDeletePost 테스트: 정상")
     void test19() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         List<String> result = List.of("1", "2", "3", "4");
 
@@ -667,20 +495,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validateExtractorResultOrDeletePost 테스트: 홀수 result")
     void test20() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         List<String> result = List.of("1", "2", "3");
 
@@ -696,20 +515,11 @@ class PostServiceTest {
     @Test
     @DisplayName("validateExtractorResultOrDeletePost 테스트: empty result")
     void test21() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        memberRepository.save(member);
+        Member member = createMember();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        postRepository.save(post);
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         List<String> result = List.of();
 

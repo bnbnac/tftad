@@ -1,9 +1,7 @@
 package com.tftad.service;
 
-import com.tftad.domain.Member;
-import com.tftad.domain.Post;
-import com.tftad.domain.Question;
-import com.tftad.domain.QuestionEditDto;
+import com.tftad.TestUtility;
+import com.tftad.domain.*;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.QuestionNotFound;
 import com.tftad.repository.ChannelRepository;
@@ -28,19 +26,22 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class QuestionServiceTest {
 
     @Autowired
-    MemberRepository memberRepository;
+    private TestUtility testUtility;
 
     @Autowired
-    QuestionService questionService;
+    private MemberRepository memberRepository;
 
     @Autowired
-    QuestionRepository questionRepository;
+    private QuestionService questionService;
 
     @Autowired
-    ChannelRepository channelRepository;
+    private QuestionRepository questionRepository;
 
     @Autowired
-    PostRepository postRepository;
+    private ChannelRepository channelRepository;
+
+    @Autowired
+    private PostRepository postRepository;
 
     @BeforeEach
     void clean() {
@@ -50,23 +51,24 @@ class QuestionServiceTest {
         memberRepository.deleteAll();
     }
 
+    Member createMember() {
+        return testUtility.createMember();
+    }
+
+    Channel createChannel(Member member) {
+        return testUtility.createChannel(member);
+    }
+
+    Post createPost(Member member, Channel channel) {
+        return testUtility.createPost(member, channel);
+    }
+
     @Test
     @DisplayName("questions 저장")
     void test1() {
-        Member member = Member.builder()
-                .name("name")
-                .email("email")
-                .password("pswd")
-                .build();
-        memberRepository.save(member);
-
-        Post post = Post.builder()
-                .title("title")
-                .videoId("vid")
-                .member(member)
-                .content("content")
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Member member = createMember();
+        Channel channel = createChannel(member);
+        Long postId = createPost(member, channel).getId();
 
         List<String> extractorResult = Arrays.asList("start1", "end1", "start2", "end2");
 
@@ -88,20 +90,13 @@ class QuestionServiceTest {
     @Test
     @DisplayName("question 1개 조회")
     void test2_1() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
+        Long postId = post.getId();
 
         Question question = Question.builder()
                 .endTime("111112")
@@ -118,27 +113,16 @@ class QuestionServiceTest {
         assertEquals(11 * 3600 + 11 * 60 + 12, questionResponse.getEndTimeOnSecond());
         assertEquals("hello1", questionResponse.getAuthorIntention());
         assertEquals(questionId, questionResponse.getId());
-        assertEquals("010000_111112.mp4", questionResponse.getFilename());
+        assertEquals(memberId + "/" + postId + "/" + "010000_111112.mp4",
+                questionResponse.getFilename());
     }
 
     @Test
     @DisplayName("question 1개 조회 - 존재하지 않는 question")
     void test2_2() {
-
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member).getId();
-
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Member member = createMember();
+        Channel channel = createChannel(member);
+        Post post = createPost(member, channel);
 
         Question question = Question.builder()
                 .endTime("111112")
@@ -155,20 +139,12 @@ class QuestionServiceTest {
     @Test
     @DisplayName("question 삭제")
     void test3() {
-        Member member1 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member1).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member1)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         Question question = Question.builder()
                 .endTime("111112")
@@ -188,20 +164,12 @@ class QuestionServiceTest {
     @Test
     @DisplayName("question 삭제 - 존재하지 않는 question")
     void test4() {
-        Member member1 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member1).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member1)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         Question question = Question.builder()
                 .endTime("111112")
@@ -216,30 +184,19 @@ class QuestionServiceTest {
             questionService.delete(memberId, questionId + 1L);
         });
     }
+
     @Test
     @DisplayName("question 삭제 - 작성자가 아닌 멤버")
     void test5() {
-        Member member1 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId1 = memberRepository.save(member1).getId();
+        Member member1 = createMember();
 
-        Member member2 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId2 = memberRepository.save(member2).getId();
+        Member member2 = createMember();
+        Long memberId2 = member2.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member1)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel1 = createChannel(member1);
+        channelRepository.save(channel1);
+
+        Post post = createPost(member1, channel1);
 
         Question question = Question.builder()
                 .endTime("111112")
@@ -258,20 +215,12 @@ class QuestionServiceTest {
     @Test
     @DisplayName("question 수정 - 존재하지 않는 question")
     void test6() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         Question question = Question.builder()
                 .authorIntention("hello")
@@ -294,27 +243,15 @@ class QuestionServiceTest {
     @Test
     @DisplayName("question 수정 - 작성자가 아닌 멤버")
     void test7() {
-        Member member1 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
+        Member member1 = createMember();
         Long memberId1 = memberRepository.save(member1).getId();
 
-        Member member2 = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
+        Member member2 = createMember();
         Long memberId2 = memberRepository.save(member2).getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member1)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel1 = createChannel(member1);
+
+        Post post = createPost(member1, channel1);
 
         Question question = Question.builder()
                 .authorIntention("hello")
@@ -340,20 +277,12 @@ class QuestionServiceTest {
     @Test
     @DisplayName("question 수정")
     void test8() {
-        Member member = Member.builder()
-                .email("email")
-                .password("pswd")
-                .name("name")
-                .build();
-        Long memberId = memberRepository.save(member).getId();
+        Member member = createMember();
+        Long memberId = member.getId();
 
-        Post post = Post.builder()
-                .title("제목")
-                .content("내용")
-                .videoId("videoId")
-                .member(member)
-                .build();
-        Long postId = postRepository.save(post).getId();
+        Channel channel = createChannel(member);
+
+        Post post = createPost(member, channel);
 
         Question question = Question.builder()
                 .authorIntention("hello")

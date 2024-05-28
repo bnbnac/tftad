@@ -1,1 +1,1 @@
-insert into `member` (name, email, password, created_at) values ('hello', 'test@test.com', '1234', '2023-12-07 14:11:00');
+insert into member (name, email, password, created_at, updated_at) values ('hello', 'test@test.com', '1234', '2023-12-07 14:11:00', '2023-12-07 14:11:00');

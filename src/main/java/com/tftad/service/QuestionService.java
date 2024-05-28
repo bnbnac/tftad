@@ -51,6 +51,7 @@ public class QuestionService {
                 .build();
     }
 
+    @Transactional
     public QuestionResponse get(Long questionId) {
         Question question = questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
         return new QuestionResponse(question);

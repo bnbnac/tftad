@@ -38,4 +38,6 @@ out/
 
 src/main/resources/application-secret.properties
 src/main/resources/application-db.properties
+src/main/resources/application-dev.properties
+src/main/resources/application-prod.properties
 todo.md

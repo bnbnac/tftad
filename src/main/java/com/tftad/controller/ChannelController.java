@@ -2,7 +2,6 @@ package com.tftad.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.AuthenticatedMember;
-import com.tftad.config.data.OAuthedMember;
 import com.tftad.domain.ChannelCreateDto;
 import com.tftad.service.ChannelService;
 import com.tftad.service.OAuthService;
@@ -18,10 +17,10 @@ public class ChannelController {
     private final OAuthService oAuthService;
     private final PostService postService;
 
-    @PostMapping("/channels")
-    public void addChannel(OAuthedMember oAuthedMember) {
-        processChannelAddition(oAuthedMember.getId(), oAuthedMember.getAuthorizationCode());
-    }
+//    @PostMapping("/channels")
+//    public void addChannel(OAuthedMember oAuthedMember) {
+//        processChannelAddition(oAuthedMember.getId(), oAuthedMember.getAuthorizationCode());
+//    }
 
     private ChannelCreateDto createChannelCreateDto(Long memberId, JsonNode channelResource) {
         JsonNode channelItem = channelResource.get("items").get(0);
