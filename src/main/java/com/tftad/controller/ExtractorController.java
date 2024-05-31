@@ -1,6 +1,7 @@
 package com.tftad.controller;
 
 import com.tftad.config.data.AuthenticatedMember;
+import com.tftad.exception.ExtractorResultError;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.request.ExtractorCompletion;
@@ -21,7 +22,6 @@ public class ExtractorController {
 
     private final ExtractorService extractorService;
     private final PostService postService;
-    private final QuestionService questionService;
 
     @PostMapping("/extractor/complete")
     public ResponseEntity<String> getExtractorResult(@RequestBody @Valid ExtractorCompletion extractorCompletion) {
@@ -29,21 +29,18 @@ public class ExtractorController {
         List<String> extractorResult = extractorCompletion.getResult();
 
         try {
-            postService.validatePublishedPost(postId);
-            postService.validateExtractorResultOrDeletePost(postId, extractorResult);
-            questionService.saveQuestionsFromExtractorResult(postId, extractorResult);
-            postService.showPost(postId);
+            postService.processExtractorCompletion(postId, extractorResult);
             return ResponseEntity.ok("question data saved. post id: " + postId);
         } catch (InvalidRequest e) {
             return ResponseEntity.badRequest().body(e.getMessage() + " post id: " + postId);
-        } catch (ExtractorServerError e) {
+        } catch (ExtractorResultError e) {
+            extractorService.deleteAnalysisByPostId(postId);
             return ResponseEntity.ok("server got empty result. post has been deleted. post id: " + postId);
         }
     }
 
     @GetMapping("/extractor/position/{postId}")
     public PositionOfPostResponse getPosition(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
-        postService.validateToGetPosition(authenticatedMember.getId(), postId);
-        return extractorService.getPosition(postId);
+        return extractorService.getPosition(authenticatedMember.getId(), postId);
     }
 }

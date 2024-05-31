@@ -2,10 +2,11 @@ package com.tftad.service;
 
 import com.tftad.domain.*;
 import com.tftad.exception.InvalidRequest;
+import com.tftad.exception.PostNotFound;
 import com.tftad.exception.QuestionNotFound;
+import com.tftad.repository.PostRepository;
 import com.tftad.repository.QuestionRepository;
 import com.tftad.response.QuestionResponse;
-import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +19,11 @@ import java.util.stream.Collectors;
 public class QuestionService {
 
     private final QuestionRepository questionRepository;
-    private final PostService postService;
+    private final PostRepository postRepository;
 
     @Transactional
     public void saveQuestionsFromExtractorResult(Long postId, List<String> extractorResult) {
-        Assert.notNull(extractorResult, "extractor result must not be null");
-        Post post = postService.getPostById(postId);
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
 
         for (int i = 0; i < extractorResult.size(); i += 2) {
             Question question = Question.builder()
@@ -58,6 +58,14 @@ public class QuestionService {
     }
 
     @Transactional
+    public List<QuestionResponse> getListOf(Long postId) {
+        return questionRepository.findByPostIdOrderByStartTimeAsc(postId)
+                .stream()
+                .map(QuestionResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
     public void edit(QuestionEditDto questionEditDto) {
         Question question = questionRepository.findById(questionEditDto.getQuestionId())
                 .orElseThrow(QuestionNotFound::new);
@@ -70,13 +78,5 @@ public class QuestionService {
                 .build();
         question.edit(questionEditor);
         questionRepository.save(question);
-    }
-
-    @Transactional
-    public List<QuestionResponse> getQuestionListOfPost(Long postId) {
-        return questionRepository.findByPostIdOrderByStartTimeAsc(postId)
-                .stream()
-                .map(QuestionResponse::new)
-                .collect(Collectors.toList());
     }
 }

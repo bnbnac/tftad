@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -82,7 +83,7 @@ class ChannelServiceTest {
 
         // when then
         assertThrows(InvalidRequest.class, () -> {
-            channelService.validateDeletedChannel("channelId");
+            channelService.validateRegisteredChannel("channelId");
         });
     }
 
@@ -104,7 +105,7 @@ class ChannelServiceTest {
         channelRepository.save(channel);
 
         // when then
-        assertDoesNotThrow(() -> channelService.validateDeletedChannel("channelId" + "other"));
+        assertDoesNotThrow(() -> channelService.validateRegisteredChannel("channelId" + "other"));
     }
 
     @Test

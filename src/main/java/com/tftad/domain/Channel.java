@@ -61,11 +61,14 @@ public class Channel {
         member.getChannels().add(this);
     }
 
-    public void delete(Member DELETED_MEMBER) {
-        this.member = DELETED_MEMBER;
-    }
-
     public void inherit(Member inheritedMember) {
         this.member = inheritedMember;
+    }
+
+    public boolean isOwnedBy(Long memberId) {
+        if (memberId == null) {
+            return false;
+        }
+        return memberId.equals(member.getId());
     }
 }

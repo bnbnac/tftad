@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.property.Urls;
 import com.tftad.domain.Post;
 import com.tftad.exception.ExtractorServerError;
+import com.tftad.exception.PostNotFound;
+import com.tftad.repository.PostRepository;
 import com.tftad.request.external.Analysis;
 import com.tftad.response.PositionOfPostResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +21,12 @@ public class ExtractorServiceImpl implements ExtractorService {
 
     private final Urls urls;
     private final PostService postService;
+    private final PostRepository postRepository;
 
     @Override
-    public PositionOfPostResponse getPosition(Long postId) {
-        Post post = postService.getPostById(postId);
+    public PositionOfPostResponse getPosition(Long memberId, Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
+        postService.validatePostOwner(memberId, post);
 
         if (post.getPublished()) {
             return PositionOfPostResponse.builder()
@@ -60,7 +64,7 @@ public class ExtractorServiceImpl implements ExtractorService {
     }
 
     @Override
-    public void queryAnalysis(String videoId, Long memberId, Long postId) {
+    public void getAnalysis(String videoId, Long memberId, Long postId) {
         Analysis analysis = Analysis.builder()
                 .videoId(videoId)
                 .memberId(memberId)

@@ -10,6 +10,6 @@ public class ExtractorServerError extends TftadException {
 
     @Override
     public int getStatusCode() {
-        return 500; // extractor 코드 받아서 parameter 넣는다?
+        return 500;
     }
 }

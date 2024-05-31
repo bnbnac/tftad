@@ -1,14 +1,12 @@
 package com.tftad.service;
 
 import com.tftad.domain.*;
-import com.tftad.exception.ExtractorServerError;
-import com.tftad.exception.InvalidRequest;
-import com.tftad.exception.PostNotFound;
+import com.tftad.exception.*;
+import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
 import com.tftad.response.PostResponseDetail;
-import io.jsonwebtoken.lang.Assert;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,35 +21,60 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final MemberService memberService;
-    private final ChannelService channelService;
+    private final ChannelRepository channelRepository;
+    private final QuestionService questionService;
+    private final OAuthService oAuthService;
 
     @Transactional
-    public Long savePost(PostCreateDto postCreateDto, Long channelId) {
-        Member member = memberService.getMemberById(postCreateDto.getMemberId());
-        Channel channel = channelService.getChannelById(channelId);
+    public Long write(PostCreateDto postCreateDto) {
+        validatePostedVideo(postCreateDto.getVideoId());
+        String youtubeChannelId = oAuthService.getYoutubeChannelId(postCreateDto.getVideoId());
+        Channel channel = findChannel(youtubeChannelId);
+        validateChannelOwner(postCreateDto.getMemberId(), channel);
 
-        Post post = Post.builder()
+        Post post = createPost(postCreateDto, channel);
+        return postRepository.save(post).getId();
+    }
+
+    private void validatePostedVideo(String videoId) {
+        postRepository.findByVideoId(videoId).ifPresent(p -> {
+            throw new InvalidRequest("videoId", "이미 등록된 영상입니다");
+        });
+    }
+
+    private Channel findChannel(String youtubeChannelId) {
+        return channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
+    }
+
+    private void validateChannelOwner(Long memberId, Channel channel) {
+        if (!channel.isOwnedBy(memberId)) {
+            throw new InvalidRequest("channel", "채널의 소유자가 아닙니다");
+        }
+    }
+
+    private Post createPost(PostCreateDto postCreateDto, Channel channel) {
+        return Post.builder()
                 .title(postCreateDto.getTitle())
                 .content(postCreateDto.getContent())
                 .videoId(postCreateDto.getVideoId())
-                .member(member)
+                .member(channel.getMember())
                 .channel(channel)
                 .build();
-        return postRepository.save(post).getId();
+    }
+
+    private Post findPost(Long postId) {
+        return postRepository.findById(postId).orElseThrow(PostNotFound::new);
     }
 
     @Transactional
     public PostResponseDetail get(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
-
+        Post post = findPost(postId);
         return new PostResponseDetail(post);
     }
 
     @Transactional
     public PostResponse getSimple(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
-
+        Post post = findPost(postId);
         return new PostResponse(post);
     }
 
@@ -63,7 +86,7 @@ public class PostService {
     }
 
     @Transactional
-    public List<PostResponse> getPostListOfMember(Long memberId, PostSearch postSearch) {
+    public List<PostResponse> getListOf(Long memberId, PostSearch postSearch) {
         return postRepository.getListOfMember(memberId, postSearch).stream()
                 .map(PostResponse::new)
                 .collect(Collectors.toList());
@@ -71,90 +94,56 @@ public class PostService {
 
     @Transactional
     public void edit(PostEditDto postEditDto) {
-        Post post = postRepository.findById(postEditDto.getPostId()).orElseThrow(PostNotFound::new);
-        if (!postEditDto.getMemberId().equals(post.getMember().getId())) {
-            throw new InvalidRequest("memberId", "소유자만 게시글을 수정할 수 있습니다");
-        }
+        Post post = findPost(postEditDto.getPostId());
+        validatePostOwner(postEditDto.getMemberId(), post);
+        PostEditor postEditor = createEditor(postEditDto, post);
 
-        PostEditor postEditor = post.toEditorBuilder()
-                .title(postEditDto.getTitle())
-                .content(postEditDto.getContent())
-                .build();
         post.edit(postEditor);
         postRepository.save(post);
     }
 
+    public void validatePostOwner(Long memberId, Post post) {
+        if (!post.isOwnedBy(memberId)) {
+            throw new InvalidRequest("memberId", "게시글 작성자가 아닙니다");
+        }
+    }
+
+    private PostEditor createEditor(PostEditDto postEditDto, Post post) {
+        return post.toEditorBuilder()
+                .title(postEditDto.getTitle())
+                .content(postEditDto.getContent())
+                .build();
+    }
+
+    // cascade questions
     @Transactional
     public void delete(Long memberId, Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
-        if (!memberId.equals(post.getMember().getId())) {
-            throw new InvalidRequest("postId", "게시글의 작성자만 글을 삭제할 수 있습니다");
-        }
+        Post post = findPost(postId);
+        validatePostOwner(memberId, post);
         postRepository.delete(post);
     }
 
-    public void validatePublishedPost(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new InvalidRequest("postId", "존재하지 않는 게시글입니다"));
+    @Transactional
+    public void processExtractorCompletion(Long postId, List<String> extractorResult) {
+        Post post = findPost(postId);
+        validatePublishedPost(post);
+        validateExtractorResult(postId, extractorResult);
+
+        questionService.saveQuestionsFromExtractorResult(postId, extractorResult);
+        post.show();
+        postRepository.save(post);
+    }
+
+    private void validatePublishedPost(Post post) {
         if (post.getPublished()) {
             throw new InvalidRequest("postId", "이미 발행된 게시글입니다");
         }
     }
 
-    public void showPost(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
-        post.show();
-        postRepository.save(post);
-    }
-
-    @Transactional
-    public void validatePostedVideo(PostCreateDto postCreateDto) {
-        postRepository.findByVideoId(postCreateDto.getVideoId())
-                .ifPresent(p -> {
-                    throw new InvalidRequest(
-                            "videoId", "이미 등록된 영상입니다. postId: " + p.getId()
-                    );
-                });
-    }
-
-    public void validateToGetPosition(Long memberId, Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
-        if (!post.getMember().getId().equals(memberId)) {
-            throw new InvalidRequest("postId", "게시글의 작성자만 작업상황을 조회할 수 있습니다");
-        }
-    }
-
-    public void validateExtractorResultOrDeletePost(Long postId, List<String> extractorResult) {
-        Assert.notNull(postId, "post id must not be null");
-        Assert.notNull(extractorResult, "extractor result must not be null");
-
+    private void validateExtractorResult(Long postId, List<String> extractorResult) {
         if (extractorResult.isEmpty() || extractorResult.size() % 2 == 1) {
             postRepository.deleteById(postId);
-            throw new ExtractorServerError();
-        }
-    }
-
-    public Post getPostById(Long postId) {
-        return postRepository.findById(postId).orElseThrow(PostNotFound::new);
-    }
-
-    @Transactional
-    public void deleteChannel(Long channelId) {
-        Member DELETED_MEMBER = memberService.getDeletedMember();
-
-        List<Post> posts = postRepository.findByChannelId(channelId);
-        for (Post post : posts) {
-            post.delete(DELETED_MEMBER);
-            postRepository.save(post);
-        }
-    }
-
-    @Transactional
-    public void inheritChannel(Long channelId, Long memberId) {
-        List<Post> posts = postRepository.findByChannelId(channelId);
-        for (Post post : posts) {
-            post.inherit(memberService.getMemberById(memberId));
-            postRepository.save(post);
+            throw new ExtractorResultError();
         }
     }
 }

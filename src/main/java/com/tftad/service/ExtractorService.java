@@ -6,9 +6,9 @@ import org.springframework.http.ResponseEntity;
 
 public interface ExtractorService {
 
-    PositionOfPostResponse getPosition(Long postId);
+    PositionOfPostResponse getPosition(Long memberId, Long postId);
 
-    void queryAnalysis(String videoId, Long memberId, Long postId);
+    void getAnalysis(String videoId, Long memberId, Long postId);
 
     ResponseEntity<JsonNode> deleteAnalysisByPostId(Long memberId, Long postId);
 

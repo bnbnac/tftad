@@ -30,25 +30,15 @@ import static com.tftad.utility.Utility.extractVideoId;
 public class PostController {
 
     private final PostService postService;
-    private final OAuthService oAuthService;
-    private final ChannelService channelService;
     private final ExtractorService extractorService;
     private final QuestionService questionService;
 
     @PostMapping("/posts")
-    public Long post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
+    public void post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
         PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember, postCreate);
-        postService.validatePostedVideo(postCreateDto);
-
-        JsonNode videoResource = oAuthService.queryVideoResource(postCreateDto.getVideoId());
-        String youtubeChannelId = oAuthService.validateVideoAndGetYoutubeChannelId(videoResource);
-
-        Long channelId = channelService.validateChannelOwnerByYoutubeChannelId(
-                postCreateDto.getMemberId(), youtubeChannelId);
-        Long postId = postService.savePost(postCreateDto, channelId);
+        Long postId = postService.write(postCreateDto);
 
         queryToExtractor(postCreateDto.getVideoId(), postCreateDto.getMemberId(), postId);
-        return postId;
     }
 
     private PostCreateDto createPostCreateDto(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
@@ -61,7 +51,7 @@ public class PostController {
 
     private void queryToExtractor(String videoId, Long memberId, Long postId) {
         try {
-            extractorService.queryAnalysis(videoId, memberId, postId);
+            extractorService.getAnalysis(videoId, memberId, postId);
         } catch (Exception e) {
             postService.delete(memberId, postId);
             throw new ExtractorServerError();
@@ -84,13 +74,13 @@ public class PostController {
     }
 
     @GetMapping("/posts/my")
-    public List<PostResponse> getList(AuthenticatedMember authenticatedMember, @ModelAttribute PostSearch postSearch) {
-        return postService.getPostListOfMember(authenticatedMember.getId(), postSearch);
+    public List<PostResponse> getMyList(AuthenticatedMember authenticatedMember, @ModelAttribute PostSearch postSearch) {
+        return postService.getListOf(authenticatedMember.getId(), postSearch);
     }
 
     @GetMapping("/posts/{postId}/questions")
     public List<QuestionResponse> getQuestionList(@PathVariable Long postId) {
-        return questionService.getQuestionListOfPost(postId);
+        return questionService.getListOf(postId);
     }
 
     @PatchMapping("/posts/{postId}")
@@ -101,7 +91,14 @@ public class PostController {
                 .postId(postId)
                 .build();
 
+
+
+
         editQuestions(postEdit.getQuestionEdits(), authenticatedMember.getId());
+
+
+
+
         postService.edit(postEditDto);
     }
 

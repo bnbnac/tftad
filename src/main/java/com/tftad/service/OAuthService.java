@@ -18,7 +18,9 @@ public class OAuthService {
 
     private final GoogleOAuthProperty googleOAuthProperty;
 
-    public JsonNode queryChannelResource(String accessToken) {
+    public JsonNode queryChannelResource(String code) {
+        String accessToken = queryAccessToken(code);
+
         WebClient client = WebClient.create();
 
         String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getYoutubeResourceUrl() + "/channels")
@@ -53,7 +55,7 @@ public class OAuthService {
                 .asText();
     }
 
-    public JsonNode queryVideoResource(String videoId) {
+    private JsonNode queryVideoResource(String videoId) {
         WebClient client = WebClient.create();
 
         String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getYoutubeResourceUrl() + "/videos")
@@ -71,21 +73,16 @@ public class OAuthService {
                 .getBody();
     }
 
-    public String validateVideoAndGetYoutubeChannelId(JsonNode videoResource) {
-        String videoDuration = getVideoDurationFromVideoResource(videoResource);
-        validateVideoLength(videoDuration, GoogleOAuthProperty.MAX_VIDEO_DURATION_MINUTES);
-        return getYoutubeChannelIdFromVideoResource(videoResource);
-    }
-
-    public void validateVideoLength(String durationString, int maxMinutes) {
+    private void validateVideoDuration(String durationString) {
         Duration duration = Duration.parse(durationString);
         long durationMinutes = duration.toMinutes();
-        if (durationMinutes > maxMinutes) {
-            throw new InvalidRequest("videoId", "video 길이는 " + maxMinutes + "분을 넘지 않아야 합니다");
+        if (durationMinutes > GoogleOAuthProperty.MAX_VIDEO_DURATION_MINUTES) {
+            throw new InvalidRequest("videoId",
+                    "video 길이는 " + GoogleOAuthProperty.MAX_VIDEO_DURATION_MINUTES + "분을 넘지 않아야 합니다");
         }
     }
 
-    private String getVideoDurationFromVideoResource(JsonNode videoResource) {
+    private String extractVideoDuration(JsonNode videoResource) {
         return videoResource.get("items")
                 .get(0)
                 .get("contentDetails")
@@ -93,11 +90,18 @@ public class OAuthService {
                 .asText();
     }
 
-    public String getYoutubeChannelIdFromVideoResource(JsonNode videoResource) {
+    private String extractYoutubeChannelId(JsonNode videoResource) {
         return videoResource.get("items")
                 .get(0)
                 .get("snippet")
                 .get("channelId")
                 .asText();
+    }
+
+    public String getYoutubeChannelId(String videoId) {
+        JsonNode videoResource = queryVideoResource(videoId);
+        String videoDuration = extractVideoDuration(videoResource);
+        validateVideoDuration(videoDuration);
+        return extractYoutubeChannelId(videoResource);
     }
 }
