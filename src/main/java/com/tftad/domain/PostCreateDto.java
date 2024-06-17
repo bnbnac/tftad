@@ -10,7 +10,7 @@ public class PostCreateDto {
     private final String title;
     private final String content;
     private final String videoId;
-    private final Long memberId;
+    private final Long memberId;?
 
     @Builder
     public PostCreateDto(String title, String content, String videoId, Long memberId) {

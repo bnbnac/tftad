@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 public class MemberEditDto {
-    private final Long memberId;
+    private final Long memberId;?
     private final String name;
     private final String password;
 

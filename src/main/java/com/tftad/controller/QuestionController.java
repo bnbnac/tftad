@@ -27,7 +27,7 @@ public class QuestionController {
                 authenticatedMember.getId(), delete.getPostId(), delete.getFilename());
     }
 
-    @PatchMapping("/questions/{questionId}")
+    @PatchMapping("/questions/{questionId}")?? 이걸 쓸일이 있을까
     public void edit(AuthenticatedMember authenticatedMember, @PathVariable Long questionId,
                                  @RequestBody QuestionEdit questionEdit) {
 

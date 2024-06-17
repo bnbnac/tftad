@@ -7,7 +7,7 @@ import org.springframework.util.Assert;
 @Getter
 public class ChannelCreateDto {
 
-    private final Long memberId;
+    private final Long memberId;?
     private final String channelTitle;
     private final String youtubeChannelId;
     private final String thumbnail;

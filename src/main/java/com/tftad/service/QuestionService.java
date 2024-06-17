@@ -6,6 +6,7 @@ import com.tftad.exception.PostNotFound;
 import com.tftad.exception.QuestionNotFound;
 import com.tftad.repository.PostRepository;
 import com.tftad.repository.QuestionRepository;
+import com.tftad.request.QuestionEdit;
 import com.tftad.response.QuestionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,9 +42,9 @@ public class QuestionService {
         Question question = questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
 
         if (!memberId.equals(question.getPost().getMember().getId())) {
-            throw new InvalidRequest("questionId", "문제의 작성자만 문제를 삭제할 수 있습니다");
+            throw new InvalidRequest("questionId", "소유자가 아닙니다");
         }
-        questionRepository.delete(question);
+        questionRepository.delete(question); 멤버와 포스트에서도 없애야
 
         return QuestionDeleteDto.builder()
                 .filename(question.generateFilename())
@@ -66,17 +67,55 @@ public class QuestionService {
     }
 
     @Transactional
-    public void edit(QuestionEditDto questionEditDto) {
-        Question question = questionRepository.findById(questionEditDto.getQuestionId())
-                .orElseThrow(QuestionNotFound::new);
-        if (!questionEditDto.getMemberId().equals(question.getPost().getMember().getId())) {
-            throw new InvalidRequest("memberId", "게시글 작성자만 문제를 수정할 수 있습니다");
-        }
-
-        QuestionEditor questionEditor = question.toEditorBuilder()
-                .authorIntention(questionEditDto.getAuthorIntention())
-                .build();
+    public void edit(Long questionId, QuestionEdit questionEdit, Long memberId) {
+        Question question = findQuestion(questionId);
+        validateQuestionOwner(memberId, question);
+        QuestionEditor questionEditor = createEditor(questionEdit, question);
         question.edit(questionEditor);
         questionRepository.save(question);
+    }
+
+    private Question findQuestion(Long questionId) {
+        return questionRepository.findById(questionId).orElseThrow(QuestionNotFound::new);
+    }
+
+    private void validateQuestionOwner(Long memberId, Question question) {
+        if (!question.getPost().isOwnedBy(memberId)) {
+            throw new InvalidRequest("memberId", "소유자가 아닙니다");
+        }
+    }
+
+    private QuestionEditor createEditor(QuestionEdit questionEdit, Question question) {
+        return question.toEditorBuilder()
+                .authorIntention(questionEdit.getAuthorIntention())
+                .build();
+    }
+
+    @Transactional
+    public void editQuestionsOfPost(Long postId, List<QuestionEdit> questionEdits, Long memberId) {
+        Post post = findPost(postId);
+        validatePostOwner(post, memberId);
+        List<Question> questionsInPost = post.getQuestions(); 멤버입장에서 오더스를 알 필요가 없어요 query가 오더에서 시작되는게 맞아보여요
+
+        for (QuestionEdit questionEdit : questionEdits) {
+            Question question = questionsInPost.stream()
+                    .filter(questionInPost -> questionInPost.getId().equals(questionEdit.getQuestionId()))
+                    .findFirst()
+                    .orElseThrow(QuestionNotFound::new);
+
+            QuestionEditor questionEditor = createEditor(questionEdit, question);
+            question.edit(questionEditor);
+            questionRepository.save(question);
+        }
+    }
+
+    private Post findPost(Long postId) {
+        return postRepository.findById(postId).orElseThrow(PostNotFound::new);
+    }
+
+    private void validatePostOwner(Post post, Long memberId) {
+        if (!post.isOwnedBy(memberId)) {
+            throw new InvalidRequest("memberId", "소유자가 아닙니다");
+        }
     }
 }

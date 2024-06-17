@@ -35,16 +35,16 @@ public class PostController {
 
     @PostMapping("/posts")
     public void post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
-        PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember, postCreate);
-        Long postId = postService.write(postCreateDto);
+        PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember.getId(), postCreate);
+        Long postId = postService.write(authenticatedMember.getId(), postCreateDto);
 
         queryToExtractor(postCreateDto.getVideoId(), postCreateDto.getMemberId(), postId);
     }
 
-    private PostCreateDto createPostCreateDto(AuthenticatedMember authenticatedMember, PostCreate postCreate) {
+    private PostCreateDto createPostCreateDto(Long memberId, PostCreate postCreate) {
         String videoId = extractVideoId(postCreate.getVideoUrl());
         return postCreate.toPostCreateDtoBuilder()
-                .memberId(authenticatedMember.getId())
+                .memberId(memberId)
                 .videoId(videoId)
                 .build();
     }
@@ -86,20 +86,9 @@ public class PostController {
     @PatchMapping("/posts/{postId}")
     public void edit(AuthenticatedMember authenticatedMember, @PathVariable Long postId,
                              @RequestBody PostEdit postEdit) {
-        PostEditDto postEditDto = postEdit.toPostEditDtoBuilder()
-                .memberId(authenticatedMember.getId())
-                .postId(postId)
-                .build();
-
-
-
-
         editQuestions(postEdit.getQuestionEdits(), authenticatedMember.getId());
 
-
-
-
-        postService.edit(postEditDto);
+        postService.edit(postId, postEdit, authenticatedMember.getId());
     }
 
     private void editQuestions(List<QuestionEdit> questionEdits, Long memberId) {

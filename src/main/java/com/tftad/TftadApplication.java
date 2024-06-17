@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 })
 @SpringBootApplication
 public class TftadApplication {
-
+data.sql 뜨는지 확인 안뜨게합시다
     public static void main(String[] args) {
         SpringApplication.run(TftadApplication.class, args);
     }

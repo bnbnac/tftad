@@ -29,27 +29,27 @@ public class ChannelService {
         return channelRepository.findByYoutubeChannelId(channelCreateDto.getYoutubeChannelId()).isEmpty();
     }
 
-    private void validateChannelOwnerByYoutubeChannelId(Channel channel) {
-        Long ownerId = channel.getMember().getId();
-        if (!ownerId.equals(-1L)) {
-            throw new InvalidRequest(
-                    "youtubeChannelId",
-                    "이미 등록된 채널입니다. member id: " + ownerId
-            );
-        }
-    }
+//    private void validateChannelOwnerByYoutubeChannelId(Channel channel) {
+//        Long ownerId = channel.getMember().getId();
+//        if (!ownerId.equals(-1L)) {
+//            throw new InvalidRequest(
+//                    "youtubeChannelId",
+//                    "이미 등록된 채널입니다. member id: " + ownerId
+//            );
+//        }
+//    }
 
-    public Long validateChannelOwnerByYoutubeChannelId(Long memberId, String youtubeChannelId) {
-        Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
-
-        if (!memberId.equals(channel.getMember().getId())) {
-            throw new InvalidRequest(
-                    "youtubeChannelId",
-                    "계정에 유튜브 채널을 등록해주세요. youtube channel id: " + youtubeChannelId
-            );
-        }
-        return channel.getId();
-    }
+//    public Long validateChannelOwnerByYoutubeChannelId(Long memberId, String youtubeChannelId) {
+//        Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
+//
+//        if (!memberId.equals(channel.getMember().getId())) {
+//            throw new InvalidRequest(
+//                    "youtubeChannelId",
+//                    "계정에 유튜브 채널을 등록해주세요. youtube channel id: " + youtubeChannelId
+//            );
+//        }
+//        return channel.getId();
+//    }
 
     public Long saveChannel(ChannelCreateDto channelCreateDto) {
         Member member = memberRepository.findById(channelCreateDto.getMemberId()).orElseThrow(MemberNotFound::new);
@@ -77,7 +77,7 @@ public class ChannelService {
     public Long validateRegisteredChannel(String youtubeChannelId) {
         Channel channel = channelRepository.findByYoutubeChannelId(youtubeChannelId).orElseThrow(ChannelNotFound::new);
         if (!channel.getMember().getId().equals(-1L)) {
-            throw new InvalidRequest("youtubeChannelId", "이미 등록된 채널입니다.");
+            throw new InvalidRequest("youtubeChannelId", "이미 등록된 채널입니다");
         }
         return channel.getId();
     }
@@ -112,7 +112,7 @@ public class ChannelService {
     public void deleteChannel(Long memberId, Long channelId) {
         Channel channel = findChannel(channelId);
         validateChannelOwner(memberId, channel);
-        Member DELETED_MEMBER = getDeletedMember();
+        Member DELETED_MEMBER = getDeletedMember(); 멤버에서도 없애야
 
         List<Post> posts = channel.getPosts();
         for (Post post : posts) {
@@ -130,13 +130,12 @@ public class ChannelService {
 
     private void validateChannelOwner(Long memberId, Channel channel) {
         if (!channel.isOwnedBy(memberId)) {
-            throw new InvalidRequest("channel", "채널의 소유자가 아닙니다");
+            throw new InvalidRequest("channel", "소유자가 아닙니다");
         }
     }
 
     private Member getDeletedMember() {
         return memberRepository.findById(-1L)
-                .orElseThrow(() -> new InvalidRequest("memberId", "no member with id -1")
-                );
+                .orElseThrow(() -> new InvalidRequest("memberId", "no member with id -1"));
     }
 }

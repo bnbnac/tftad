@@ -11,8 +11,8 @@ public class PostEditDto {
     private final String title;
     private final String content;
     private final List<String> authorIntentions;
-    private final Long memberId;
-    private final Long postId;
+    private final Long memberId;?
+    private final Long postId;?
 
     @Builder
     public PostEditDto(String title, String content, List<String> authorIntentions, Long memberId, Long postId) {

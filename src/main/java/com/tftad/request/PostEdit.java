@@ -1,6 +1,5 @@
 package com.tftad.request;
 
-import com.tftad.domain.PostEditDto;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,11 +17,5 @@ public class PostEdit {
         this.title = title;
         this.content = content;
         this.questionEdits = questionEdits;
-    }
-
-    public PostEditDto.PostEditDtoBuilder toPostEditDtoBuilder() {
-        return PostEditDto.builder()
-                .title(title)
-                .content(content);
     }
 }

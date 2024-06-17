@@ -3,7 +3,9 @@ package com.tftad.service;
 import com.tftad.domain.*;
 import com.tftad.exception.*;
 import com.tftad.repository.ChannelRepository;
+import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
+import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
 import com.tftad.response.PostResponseDetail;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostService {
 
+    private final MemberRepository memberRepository;
     private final PostRepository postRepository;
     private final ChannelRepository channelRepository;
     private final QuestionService questionService;
@@ -48,7 +51,7 @@ public class PostService {
 
     private void validateChannelOwner(Long memberId, Channel channel) {
         if (!channel.isOwnedBy(memberId)) {
-            throw new InvalidRequest("channel", "채널의 소유자가 아닙니다");
+            throw new InvalidRequest("channel", "소유자가 아닙니다");
         }
     }
 
@@ -93,25 +96,29 @@ public class PostService {
     }
 
     @Transactional
-    public void edit(PostEditDto postEditDto) {
-        Post post = findPost(postEditDto.getPostId());
-        validatePostOwner(postEditDto.getMemberId(), post);
-        PostEditor postEditor = createEditor(postEditDto, post);
+    public void edit(Long postId, PostEdit postEdit, Long memberId) {
+        editPost(postId, postEdit, memberId); 여기도해야함>
+        questionService.editQuestionsOfPost(postId, postEdit.getQuestionEdits(), memberId); 여기도?
+    }
 
+    private void editPost(Long postId, PostEdit postEdit, Long memberId) {
+        Post post = findPost(postId);
+        validatePostOwner(memberId, post);
+        PostEditor postEditor = createEditor(postEdit, post);
         post.edit(postEditor);
         postRepository.save(post);
     }
 
     public void validatePostOwner(Long memberId, Post post) {
         if (!post.isOwnedBy(memberId)) {
-            throw new InvalidRequest("memberId", "게시글 작성자가 아닙니다");
+            throw new InvalidRequest("memberId", "소유자가 아닙니다");
         }
     }
 
-    private PostEditor createEditor(PostEditDto postEditDto, Post post) {
+    private PostEditor createEditor(PostEdit postEdit, Post post) {
         return post.toEditorBuilder()
-                .title(postEditDto.getTitle())
-                .content(postEditDto.getContent())
+                .title(postEdit.getTitle())
+                .content(postEdit.getContent())
                 .build();
     }
 
@@ -119,8 +126,15 @@ public class PostService {
     @Transactional
     public void delete(Long memberId, Long postId) {
         Post post = findPost(postId);
-        validatePostOwner(memberId, post);
+        Member member = findMember(memberId);
+        validatePostOwner(memberId, post);.. 그럼 이놈의 존재가
+
+        member.getPosts().remove(post);
         postRepository.delete(post);
+    }
+
+    private Member findMember(Long memberId) {
+        return memberRepository.findById(memberId).orElseThrow(MemberNotFound::new);
     }
 
     @Transactional

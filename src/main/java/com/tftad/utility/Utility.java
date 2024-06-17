@@ -31,7 +31,7 @@ public class Utility {
                 .domain(domain)
                 .path("/")
                 .httpOnly(true)
-                .secure(false)
+                .secure(false) 이거 포함 옵션들 따로 빼서 환경변수로 받던가해야겠음 지금은 tln on이니까
                 .maxAge(Duration.ofDays(maxAgeInDays))
                 .sameSite("strict")
                 .build();
