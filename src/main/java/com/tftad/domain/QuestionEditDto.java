@@ -13,6 +13,4 @@ public class QuestionEditDto {
         this.authorIntention = authorIntention;
         this.ownerValidated = ownerValidated;
     }
-
-
 }

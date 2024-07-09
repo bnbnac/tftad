@@ -3,17 +3,16 @@ package com.tftad.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.PostCreateDto;
-import com.tftad.domain.PostEditDto;
-import com.tftad.domain.QuestionEditDto;
 import com.tftad.exception.ExtractorServerError;
 import com.tftad.request.PostCreate;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
-import com.tftad.request.QuestionEdit;
 import com.tftad.response.PostResponse;
 import com.tftad.response.PostResponseDetail;
 import com.tftad.response.QuestionResponse;
-import com.tftad.service.*;
+import com.tftad.service.ExtractorService;
+import com.tftad.service.PostService;
+import com.tftad.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,25 +34,24 @@ public class PostController {
 
     @PostMapping("/posts")
     public void post(AuthenticatedMember authenticatedMember, @RequestBody @Valid PostCreate postCreate) {
-        PostCreateDto postCreateDto = createPostCreateDto(authenticatedMember.getId(), postCreate);
-        Long postId = postService.write(authenticatedMember.getId(), postCreateDto);
+        PostCreateDto postCreateDto = createPostCreateDto(postCreate);
+        Long postId = postService.write(postCreateDto, authenticatedMember);
 
-        queryToExtractor(postCreateDto.getVideoId(), postCreateDto.getMemberId(), postId);
+        queryToExtractor(postCreateDto.getVideoId(), authenticatedMember, postId);
     }
 
-    private PostCreateDto createPostCreateDto(Long memberId, PostCreate postCreate) {
+    private PostCreateDto createPostCreateDto(PostCreate postCreate) {
         String videoId = extractVideoId(postCreate.getVideoUrl());
         return postCreate.toPostCreateDtoBuilder()
-                .memberId(memberId)
                 .videoId(videoId)
                 .build();
     }
 
-    private void queryToExtractor(String videoId, Long memberId, Long postId) {
+    private void queryToExtractor(String videoId, AuthenticatedMember authenticatedMember, Long postId) {
         try {
-            extractorService.getAnalysis(videoId, memberId, postId);
+            extractorService.getAnalysis(videoId, authenticatedMember.getId(), postId);
         } catch (Exception e) {
-            postService.delete(memberId, postId);
+            postService.delete(postId, authenticatedMember);
             throw new ExtractorServerError();
         }
     }
@@ -85,24 +83,13 @@ public class PostController {
 
     @PatchMapping("/posts/{postId}")
     public void edit(AuthenticatedMember authenticatedMember, @PathVariable Long postId,
-                             @RequestBody PostEdit postEdit) {
-        editQuestions(postEdit.getQuestionEdits(), authenticatedMember.getId());
-
-        postService.edit(postId, postEdit, authenticatedMember.getId());
-    }
-
-    private void editQuestions(List<QuestionEdit> questionEdits, Long memberId) {
-        List<QuestionEditDto> questionEditDtoList = questionEdits.stream()
-                .map(questionEdit -> questionEdit.toQuestionEditDtoBuilder()
-                        .memberId(memberId)
-                        .build())
-                .toList();
-        questionEditDtoList.forEach(questionService::edit);
+                     @RequestBody PostEdit postEdit) {
+        postService.edit(postId, postEdit, authenticatedMember);
     }
 
     @DeleteMapping("/posts/{postId}")
     public ResponseEntity<JsonNode> delete(AuthenticatedMember authenticatedMember, @PathVariable Long postId) {
-        postService.delete(authenticatedMember.getId(), postId);
+        postService.delete(postId, authenticatedMember);
         return extractorService.deleteAnalysisByPostId(authenticatedMember.getId(), postId);
     }
 }

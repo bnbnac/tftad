@@ -44,19 +44,11 @@ public class Question {
         this.authorIntention = authorIntention;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        changePost(post);
-    }
-
-    private void changePost(Post post) {
-        if (this.post != null) {
-            this.post.getQuestions().remove(this);
-        }
         this.post = post;
-        post.getQuestions().add(this);
     }
 
     public String generateFilename() {
-        return post.getMember().getId() + "/" + post.getId() + "/" + startTime + "_" + endTime + ".mp4";
+        return post.getMemberId() + "/" + post.getId() + "/" + startTime + "_" + endTime + ".mp4";
     }
 
     public Integer getStartTimeOnSecond() {

@@ -1,8 +1,10 @@
 package com.tftad.service;
 
+import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Member;
 import com.tftad.exception.InvalidLoginInformation;
 import com.tftad.exception.InvalidRequest;
+import com.tftad.exception.MemberNotFound;
 import com.tftad.repository.MemberRepository;
 import com.tftad.request.Login;
 import com.tftad.request.Signup;
@@ -41,5 +43,9 @@ public class AuthService {
                 .password(encodedPassword)
                 .build();
         return memberRepository.save(member).getId();
+    }
+
+    public Member checkMember(AuthenticatedMember authenticatedMember) {
+        return memberRepository.findById(authenticatedMember.getId()).orElseThrow(MemberNotFound::new);
     }
 }

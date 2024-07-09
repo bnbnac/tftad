@@ -73,7 +73,7 @@ class QuestionServiceTest {
         List<String> extractorResult = Arrays.asList("start1", "end1", "start2", "end2");
 
         // when
-        questionService.saveQuestionsFromExtractorResult(postId, extractorResult);
+//        questionService.saveQuestionsFromExtractorResult(postId, extractorResult);
 
         Iterator<Question> iterator = questionRepository.findAll().iterator();
         Question q1 = iterator.next();

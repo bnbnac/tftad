@@ -15,7 +15,7 @@ public class ChannelController {
     private final ChannelService channelService;
     private final OAuthService oAuthService;
 
-    private ChannelCreateDto createChannelCreateDto(Long memberId, JsonNode channelResource) {
+    private ChannelCreateDto createChannelCreateDto(JsonNode channelResource) {
         JsonNode channelItem = channelResource.get("items").get(0);
         String youtubeChannelId = channelItem.get("id").asText();
         String channelTitle = channelItem.get("snippet").get("title").asText();
@@ -24,7 +24,6 @@ public class ChannelController {
         return ChannelCreateDto.builder()
                 .youtubeChannelId(youtubeChannelId)
                 .channelTitle(channelTitle)
-                .memberId(memberId)
                 .thumbnail(thumbnail)
                 .build();
     }
@@ -32,13 +31,13 @@ public class ChannelController {
     @PostMapping("/channels")
     public void addChannel(AuthenticatedMember authenticatedMember, @RequestParam String code) {
         JsonNode channelResource = oAuthService.queryChannelResource(code);
-        ChannelCreateDto channelCreateDto = createChannelCreateDto(authenticatedMember.getId(), channelResource);
+        ChannelCreateDto channelCreateDto = createChannelCreateDto(channelResource);
 
-        channelService.addChannel(channelCreateDto);
+        channelService.addChannel(channelCreateDto, authenticatedMember);
     }
 
     @DeleteMapping("/channels/{channelId}")
     public void delete(AuthenticatedMember authenticatedMember, @PathVariable Long channelId) {
-        channelService.deleteChannel(authenticatedMember.getId(), channelId);
+        channelService.deleteChannel(channelId, authenticatedMember);
     }
 }

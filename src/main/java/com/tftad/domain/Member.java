@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Entity
@@ -30,12 +28,6 @@ public class Member {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "member")
-    private List<Channel> channels = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member")
-    private List<Post> posts = new ArrayList<>();
 
     @Builder
     public Member(String email, String name, String password) {

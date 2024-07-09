@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -21,9 +19,7 @@ public class Channel {
     @Column(name = "CHANNEL_ID")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MEMBER_ID")
-    private Member member;
+    private Long memberId;
 
     private String channelTitle;
 
@@ -35,40 +31,29 @@ public class Channel {
 
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "channel")
-    private List<Post> posts = new ArrayList<>();
-
     @Builder
-    public Channel(String channelTitle, String youtubeChannelId, String thumbnail, Member member) {
+    public Channel(String channelTitle, String youtubeChannelId, String thumbnail, Long memberId) {
         Assert.hasText(channelTitle, "channelTitle must not be null");
         Assert.hasText(youtubeChannelId, "youtubeChannelId must not be null");
         Assert.notNull(thumbnail, "thumbnail must not be null(google may serve)");
-        Assert.notNull(member, "member must not be null");
+        Assert.notNull(memberId, "member id must not be null");
 
         this.channelTitle = channelTitle;
         this.youtubeChannelId = youtubeChannelId;
         this.thumbnail = thumbnail;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        changeMember(member);
+        this.memberId = memberId;
     }
 
-    private void changeMember(Member member) {
-        if (this.member != null) {
-            this.member.getChannels().remove(this);
-        }
-        this.member = member;
-        member.getChannels().add(this);
-    }
-
-    public void inherit(Member inheritedMember) {
-        this.member = inheritedMember;
+    public void inherit(Long inheritedMemberId) {
+        this.memberId = inheritedMemberId;
     }
 
     public boolean isOwnedBy(Long memberId) {
         if (memberId == null) {
             return false;
         }
-        return memberId.equals(member.getId());
+        return memberId.equals(this.memberId);
     }
 }

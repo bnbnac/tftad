@@ -1,9 +1,12 @@
 package com.tftad.service;
 
+import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.*;
-import com.tftad.exception.*;
+import com.tftad.exception.ChannelNotFound;
+import com.tftad.exception.ExtractorResultError;
+import com.tftad.exception.InvalidRequest;
+import com.tftad.exception.PostNotFound;
 import com.tftad.repository.ChannelRepository;
-import com.tftad.repository.MemberRepository;
 import com.tftad.repository.PostRepository;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
@@ -22,20 +25,22 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostService {
 
-    private final MemberRepository memberRepository;
+    private final AuthService authService;
     private final PostRepository postRepository;
     private final ChannelRepository channelRepository;
-    private final QuestionService questionService;
     private final OAuthService oAuthService;
+    private final QuestionService questionService;
 
     @Transactional
-    public Long write(PostCreateDto postCreateDto) {
+    public Long write(PostCreateDto postCreateDto, AuthenticatedMember authenticatedMember) {
+        Member member = authService.checkMember(authenticatedMember);
+
         validatePostedVideo(postCreateDto.getVideoId());
         String youtubeChannelId = oAuthService.getYoutubeChannelId(postCreateDto.getVideoId());
         Channel channel = findChannel(youtubeChannelId);
-        validateChannelOwner(postCreateDto.getMemberId(), channel);
+        validateChannelOwner(member.getId(), channel);
 
-        Post post = createPost(postCreateDto, channel);
+        Post post = createPost(postCreateDto, channel.getId(), member.getId());
         return postRepository.save(post).getId();
     }
 
@@ -55,13 +60,13 @@ public class PostService {
         }
     }
 
-    private Post createPost(PostCreateDto postCreateDto, Channel channel) {
+    private Post createPost(PostCreateDto postCreateDto, Long channelId, Long memberId) {
         return Post.builder()
                 .title(postCreateDto.getTitle())
                 .content(postCreateDto.getContent())
                 .videoId(postCreateDto.getVideoId())
-                .member(channel.getMember())
-                .channel(channel)
+                .memberId(memberId)
+                .channelId(channelId)
                 .build();
     }
 
@@ -96,17 +101,18 @@ public class PostService {
     }
 
     @Transactional
-    public void edit(Long postId, PostEdit postEdit, Long memberId) {
-        editPost(postId, postEdit, memberId); 여기도해야함>
-        questionService.editQuestionsOfPost(postId, postEdit.getQuestionEdits(), memberId); 여기도?
+    public void edit(Long postId, PostEdit postEdit, AuthenticatedMember authenticatedMember) {
+        Member member = authService.checkMember(authenticatedMember);
+        Post post = editPost(postId, postEdit, member.getId());
+        questionService.editQuestions(post, postEdit.getQuestionEdits(), authenticatedMember);
     }
 
-    private void editPost(Long postId, PostEdit postEdit, Long memberId) {
+    private Post editPost(Long postId, PostEdit postEdit, Long memberId) {
         Post post = findPost(postId);
         validatePostOwner(memberId, post);
         PostEditor postEditor = createEditor(postEdit, post);
         post.edit(postEditor);
-        postRepository.save(post);
+        return postRepository.save(post);
     }
 
     public void validatePostOwner(Long memberId, Post post) {
@@ -122,29 +128,24 @@ public class PostService {
                 .build();
     }
 
-    // cascade questions
     @Transactional
-    public void delete(Long memberId, Long postId) {
+    public void delete(Long postId, AuthenticatedMember authenticatedMember) {
+        Member member = authService.checkMember(authenticatedMember);
         Post post = findPost(postId);
-        Member member = findMember(memberId);
-        validatePostOwner(memberId, post);.. 그럼 이놈의 존재가
+        validatePostOwner(member.getId(), post);
 
-        member.getPosts().remove(post);
+        questionService.deleteQuestionsOfPost(post, member, authenticatedMember);
         postRepository.delete(post);
-    }
-
-    private Member findMember(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(MemberNotFound::new);
     }
 
     @Transactional
     public void processExtractorCompletion(Long postId, List<String> extractorResult) {
         Post post = findPost(postId);
         validatePublishedPost(post);
-        validateExtractorResult(postId, extractorResult);
+        validateExtractorResult(post, extractorResult);
 
-        questionService.saveQuestionsFromExtractorResult(postId, extractorResult);
-        post.show();
+        questionService.saveQuestionsFromExtractorResult(post, extractorResult);
+        post.publish();
         postRepository.save(post);
     }
 
@@ -154,9 +155,9 @@ public class PostService {
         }
     }
 
-    private void validateExtractorResult(Long postId, List<String> extractorResult) {
+    private void validateExtractorResult(Post post, List<String> extractorResult) {
         if (extractorResult.isEmpty() || extractorResult.size() % 2 == 1) {
-            postRepository.deleteById(postId);
+            postRepository.delete(post);
             throw new ExtractorResultError();
         }
     }

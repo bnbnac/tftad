@@ -1,6 +1,5 @@
 package com.tftad.request;
 
-import com.tftad.domain.MemberEditDto;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,11 +13,5 @@ public class MemberEdit {
     public MemberEdit(String name, String password) {
         this.name = name;
         this.password = password;
-    }
-
-    public MemberEditDto.MemberEditDtoBuilder toMemberEditDtoBuilder() {
-        return MemberEditDto.builder()
-                .name(name)
-                .password(password);
     }
 }
