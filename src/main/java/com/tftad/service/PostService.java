@@ -8,6 +8,7 @@ import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.PostNotFound;
 import com.tftad.repository.ChannelRepository;
 import com.tftad.repository.PostRepository;
+import com.tftad.request.ExtractorCompletion;
 import com.tftad.request.PostEdit;
 import com.tftad.request.PostSearch;
 import com.tftad.response.PostResponse;
@@ -29,11 +30,11 @@ public class PostService {
     private final PostRepository postRepository;
     private final ChannelRepository channelRepository;
     private final OAuthService oAuthService;
-    private final QuestionService questionService;
+    private final QuestionByLifecycleOfPostService questionByLifecycleOfPostService;
 
     @Transactional
     public Long write(PostCreateDto postCreateDto, AuthenticatedMember authenticatedMember) {
-        Member member = authService.checkMember(authenticatedMember);
+        Member member = authService.check(authenticatedMember);
 
         validatePostedVideo(postCreateDto.getVideoId());
         String youtubeChannelId = oAuthService.getYoutubeChannelId(postCreateDto.getVideoId());
@@ -75,9 +76,8 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDetail get(Long postId) {
-        Post post = findPost(postId);
-        return new PostResponseDetail(post);
+    public PostResponseDetail getPostDetails(Long postId) {
+        return postRepository.getPostWithDetails(postId).orElseThrow(PostNotFound::new);
     }
 
     @Transactional
@@ -102,20 +102,20 @@ public class PostService {
 
     @Transactional
     public void edit(Long postId, PostEdit postEdit, AuthenticatedMember authenticatedMember) {
-        Member member = authService.checkMember(authenticatedMember);
-        Post post = editPost(postId, postEdit, member.getId());
-        questionService.editQuestions(post, postEdit.getQuestionEdits(), authenticatedMember);
+        Member member = authService.check(authenticatedMember);
+        editPost(postId, postEdit, member.getId());
+
+        questionByLifecycleOfPostService.editQuestionsOfPost(postId, postEdit);
     }
 
-    private Post editPost(Long postId, PostEdit postEdit, Long memberId) {
+    private void editPost(Long postId, PostEdit postEdit, Long memberId) {
         Post post = findPost(postId);
         validatePostOwner(memberId, post);
         PostEditor postEditor = createEditor(postEdit, post);
         post.edit(postEditor);
-        return postRepository.save(post);
     }
 
-    public void validatePostOwner(Long memberId, Post post) {
+    private void validatePostOwner(Long memberId, Post post) {
         if (!post.isOwnedBy(memberId)) {
             throw new InvalidRequest("memberId", "소유자가 아닙니다");
         }
@@ -130,23 +130,22 @@ public class PostService {
 
     @Transactional
     public void delete(Long postId, AuthenticatedMember authenticatedMember) {
-        Member member = authService.checkMember(authenticatedMember);
+        Member member = authService.check(authenticatedMember);
         Post post = findPost(postId);
         validatePostOwner(member.getId(), post);
 
-        questionService.deleteQuestionsOfPost(post, member, authenticatedMember);
+        questionByLifecycleOfPostService.deleteQuestionsOfPost(postId);
         postRepository.delete(post);
     }
 
     @Transactional
-    public void processExtractorCompletion(Long postId, List<String> extractorResult) {
-        Post post = findPost(postId);
+    public void processExtractorCompletion(ExtractorCompletion extractorCompletion) {
+        Post post = findPost(extractorCompletion.getPostId());
         validatePublishedPost(post);
-        validateExtractorResult(post, extractorResult);
+        validateExtractorResult(post, extractorCompletion.getResult());
 
-        questionService.saveQuestionsFromExtractorResult(post, extractorResult);
+        questionByLifecycleOfPostService.createQuestionsOfPost(post, extractorCompletion.getResult());
         post.publish();
-        postRepository.save(post);
     }
 
     private void validatePublishedPost(Post post) {
@@ -158,7 +157,17 @@ public class PostService {
     private void validateExtractorResult(Post post, List<String> extractorResult) {
         if (extractorResult.isEmpty() || extractorResult.size() % 2 == 1) {
             postRepository.delete(post);
-            throw new ExtractorResultError();
+            throw new ExtractorResultError(post.getMemberId(), post.getId());
         }
+    }
+
+    @Transactional
+    public boolean isPublishedPostOwner(Long postId, AuthenticatedMember authenticatedMember) {
+        Member member = authService.check(authenticatedMember);
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
+
+        validatePostOwner(member.getId(), post);
+
+        return post.getPublished();
     }
 }

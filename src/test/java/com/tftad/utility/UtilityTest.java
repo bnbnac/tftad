@@ -3,17 +3,19 @@ package com.tftad.utility;
 import com.tftad.exception.InvalidRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.tftad.utility.Utility.extractVideoId;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class UtilityTest {
+
+    @Autowired
+    private Utility utility;
 
     @Test
     @DisplayName("유튜브 주소에서 비디오 아이디를 가져온다")
@@ -31,7 +33,7 @@ class UtilityTest {
         };
 
         for (String url : validUrls) {
-            assertEquals(extractVideoId(url), "video-id");
+            assertEquals(utility.extractVideoId(url), "video-id");
         }
     }
 
@@ -51,11 +53,11 @@ class UtilityTest {
         };
 
         for (String url : noIdUrls) {
-            assertThrows(InvalidRequest.class, () -> extractVideoId(url));
+            assertThrows(InvalidRequest.class, () -> utility.extractVideoId(url));
         }
 
         for (String url : willBeFilteredUrls) {
-            String filtered = extractVideoId(url);
+            String filtered = utility.extractVideoId(url);
 
             String regex = "^[\\w-]+$";
             Pattern pattern = Pattern.compile(regex);

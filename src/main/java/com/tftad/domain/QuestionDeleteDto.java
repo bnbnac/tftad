@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 public class QuestionDeleteDto {
-    private final Long postId;?!!!
+    private final Long postId;
     private final String filename;
 
     @Builder

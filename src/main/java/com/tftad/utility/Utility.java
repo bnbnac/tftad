@@ -1,14 +1,17 @@
 package com.tftad.utility;
 
 import com.tftad.config.property.AuthProperty;
+import com.tftad.config.property.JwtProperty;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.Unauthorized;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -18,26 +21,31 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
+@RequiredArgsConstructor
+@Component
 public class Utility {
-    public static String generateJws(JwtBuilder jwtBuilder, byte[] jwtByteKey, int maxAgeInDays) {
+
+    private final JwtProperty jwtProperty;
+
+    public String generateJws(JwtBuilder jwtBuilder, byte[] jwtByteKey, int maxAgeInDays) {
         return jwtBuilder
                 .expiration(Date.from(Instant.now().plus(maxAgeInDays, ChronoUnit.DAYS)))
                 .signWith(Keys.hmacShaKeyFor(jwtByteKey))
                 .compact();
     }
 
-    public static ResponseCookie generateCookie(String domain, String cookieName, String jws, int maxAgeInDays) {
+    public ResponseCookie generateCookie(String domain, String cookieName, String jws, int maxAgeInDays) {
         return ResponseCookie.from(cookieName, jws)
                 .domain(domain)
                 .path("/")
                 .httpOnly(true)
-                .secure(false) 이거 포함 옵션들 따로 빼서 환경변수로 받던가해야겠음 지금은 tln on이니까
+                .secure(jwtProperty.isCookieSecure())
                 .maxAge(Duration.ofDays(maxAgeInDays))
                 .sameSite("strict")
                 .build();
     }
 
-    public static Cookie[] extractCookiesFromRequest(HttpServletRequest servletRequest) {
+    public Cookie[] extractCookiesFromRequest(HttpServletRequest servletRequest) {
         if (servletRequest == null) {
             log.error("servletRequest is null");
             throw new Unauthorized();
@@ -52,7 +60,7 @@ public class Utility {
         return cookies;
     }
 
-    public static String extractValueByCookieName(Cookie[] cookies, String cookieName) {
+    public String extractValueByCookieName(Cookie[] cookies, String cookieName) {
         for (Cookie cookie : cookies) {
             if (cookieName.equals(cookie.getName())) {
                 return cookie.getValue();
@@ -61,7 +69,7 @@ public class Utility {
         throw new Unauthorized();
     }
 
-    public static Jws<Claims> parseJws(String jws, byte[] jwtByteKey) {
+    public Jws<Claims> parseJws(String jws, byte[] jwtByteKey) {
         try {
             return Jwts.parser()
                     .verifyWith(Keys.hmacShaKeyFor(jwtByteKey))
@@ -72,7 +80,7 @@ public class Utility {
         }
     }
 
-    public static void verifyExpiration(Claims payload) {
+    public void verifyExpiration(Claims payload) {
         Long expiration = payload.get(AuthProperty.EXPIRATION, Long.class);
         if (expiration == null) {
             throw new Unauthorized();
@@ -84,18 +92,18 @@ public class Utility {
         }
     }
 
-    public static String extractVideoId(String url) {
+    public String extractVideoId(String url) {
         validateVideoUrl(url);
         return applyRegexToExtractVideoId(url);
     }
 
-    public static void validateVideoUrl(String url) {
+    public void validateVideoUrl(String url) {
         if (url == null || !url.contains("youtu")) {
             throw new InvalidRequest("url", "올바른 유튜브 영상 주소를 입력해주세요");
         }
     }
 
-    public static String applyRegexToExtractVideoId(String url) {
+    public String applyRegexToExtractVideoId(String url) {
         String regex = "(?<=(v%3D-|v=|v/|youtu.be/))[\\w-]+";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(url);

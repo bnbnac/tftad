@@ -1,13 +1,8 @@
 package com.tftad.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.property.Urls;
-import com.tftad.domain.Member;
-import com.tftad.domain.Post;
 import com.tftad.exception.ExtractorServerError;
-import com.tftad.exception.PostNotFound;
-import com.tftad.repository.PostRepository;
 import com.tftad.request.external.Analysis;
 import com.tftad.response.PositionOfPostResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,23 +17,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ExtractorServiceImpl implements ExtractorService {
 
     private final Urls urls;
-    private final PostService postService;
-    private final AuthService authService;
-    private final PostRepository postRepository;
 
     @Override
-    public PositionOfPostResponse getPosition(Long postId, AuthenticatedMember authenticatedMember) {
-        Member member = authService.checkMember(authenticatedMember);
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
-        postService.validatePostOwner(member.getId(), post);
-
-        if (post.getPublished()) {
-            return PositionOfPostResponse.builder()
-                    .published(true)
-                    .build();
-        }
-
-        ResponseEntity<JsonNode> response = queryPositionOnWorkingQueue(post);
+    public PositionOfPostResponse getPosition(Long postId) {
+        ResponseEntity<JsonNode> response = queryPositionOnWorkingQueue(postId);
         if (response.getStatusCode() != HttpStatus.OK) {
             throw new ExtractorServerError();
         }
@@ -105,11 +87,11 @@ public class ExtractorServiceImpl implements ExtractorService {
                 .block();
     }
 
-    private ResponseEntity<JsonNode> queryPositionOnWorkingQueue(Post post) {
+    private ResponseEntity<JsonNode> queryPositionOnWorkingQueue(Long postId) {
         WebClient client = WebClient.create();
 
         String uri = UriComponentsBuilder.fromUriString(urls.getExtractorServer() + "/position")
-                .queryParam("id", post.getId())
+                .queryParam("id", postId)
                 .build().toUriString();
 
         return client.get()

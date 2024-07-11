@@ -11,7 +11,7 @@ public class OAuthController {
 
     private final JwtProperty jwtProperty;
     private final AuthProperty authProperty;
-redirection 포인트를 /api/~~로 해야함
+//redirection 포인트를 /api/~~로 해야함
 //    @GetMapping("/oauth/login/google") // injection?
 //    public ResponseEntity<Object> getGoogleOAuthRedirection(@RequestParam String code) {
 //

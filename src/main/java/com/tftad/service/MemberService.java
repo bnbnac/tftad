@@ -8,6 +8,7 @@ import com.tftad.exception.MemberNotFound;
 import com.tftad.repository.MemberRepository;
 import com.tftad.request.MemberEdit;
 import com.tftad.response.MemberResponse;
+import com.tftad.response.MemberResponseDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,18 +24,19 @@ public class MemberService {
 
     @Transactional
     public MemberResponse get(Long memberId) {
-        return new MemberResponse(memberRepository.findById(memberId).orElseThrow(MemberNotFound::new));
-    }
-
-    @Transactional
-    public MemberResponse get(AuthenticatedMember authenticatedMember) {
-        Member member = authService.checkMember(authenticatedMember);
+        Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFound::new);
         return new MemberResponse(member);
     }
 
     @Transactional
+    public MemberResponseDetail getMemberDetails(AuthenticatedMember authenticatedMember) {
+        Member member = authService.check(authenticatedMember);
+        return memberRepository.getMemberWithDetails(member.getId());
+    }
+
+    @Transactional
     public void edit(Long memberId, MemberEdit memberEdit, AuthenticatedMember authenticatedMember) {
-        Member member = authService.checkMember(authenticatedMember);
+        Member member = authService.check(authenticatedMember);
         validateMemberOwner(memberId, authenticatedMember);
 
         String password = null;
@@ -43,7 +45,6 @@ public class MemberService {
         }
         MemberEditor memberEditor = createEditor(password, memberEdit, member);
         member.edit(memberEditor);
-        memberRepository.save(member);
     }
 
     private void validateMemberOwner(Long memberId, AuthenticatedMember authenticatedMember) {
@@ -57,5 +58,10 @@ public class MemberService {
                 .name(memberEdit.getName())
                 .password(password)
                 .build();
+    }
+
+    public Member getDeletedMember() {
+        return memberRepository.findById(-1L)
+                .orElseThrow(() -> new InvalidRequest("memberId", "no member with id -1"));
     }
 }

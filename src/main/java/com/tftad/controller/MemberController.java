@@ -3,7 +3,7 @@ package com.tftad.controller;
 
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.request.MemberEdit;
-import com.tftad.response.MemberResponse;
+import com.tftad.response.MemberResponseDetail;
 import com.tftad.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,8 @@ public class MemberController {
 //    } // 이걸 왜했지?
 
     @GetMapping("/members/me")
-    public MemberResponse get(AuthenticatedMember authenticatedMember) {
-        return memberService.get(authenticatedMember);
+    public MemberResponseDetail get(AuthenticatedMember authenticatedMember) {
+        return memberService.getMemberDetails(authenticatedMember);
     }
 
     @PatchMapping("members/{memberId}")

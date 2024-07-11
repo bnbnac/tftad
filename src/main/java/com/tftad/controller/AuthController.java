@@ -5,6 +5,7 @@ import com.tftad.config.property.JwtProperty;
 import com.tftad.request.Login;
 import com.tftad.request.Signup;
 import com.tftad.service.AuthService;
+import com.tftad.utility.Utility;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import jakarta.validation.Valid;
@@ -17,9 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.tftad.utility.Utility.generateCookie;
-import static com.tftad.utility.Utility.generateJws;
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +26,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtProperty jwtProperty;
     private final AuthProperty authProperty;
+    private final Utility utility;
 
     @PostMapping("/auth/login")
     public ResponseEntity<Object> login(@RequestBody @Valid Login login) {
@@ -35,9 +34,9 @@ public class AuthController {
 
         JwtBuilder builder = Jwts.builder()
                 .claim(AuthProperty.MEMBER_ID, String.valueOf(memberId));
-        String jws = generateJws(builder, jwtProperty.getKey(), jwtProperty.getMaxAgeInDays());
+        String jws = utility.generateJws(builder, jwtProperty.getKey(), jwtProperty.getMaxAgeInDays());
 
-        ResponseCookie cookie = generateCookie(
+        ResponseCookie cookie = utility.generateCookie(
                 authProperty.getTftadDomain(),
                 authProperty.getTftadCookieName(),
                 jws,

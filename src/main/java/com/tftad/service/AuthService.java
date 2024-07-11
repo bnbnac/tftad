@@ -45,7 +45,7 @@ public class AuthService {
         return memberRepository.save(member).getId();
     }
 
-    public Member checkMember(AuthenticatedMember authenticatedMember) {
+    public Member check(AuthenticatedMember authenticatedMember) {
         return memberRepository.findById(authenticatedMember.getId()).orElseThrow(MemberNotFound::new);
     }
 }
