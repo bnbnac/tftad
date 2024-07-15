@@ -1,534 +1,385 @@
-//package com.tftad.service;
-//
-//import com.tftad.TestUtility;
-//import com.tftad.domain.*;
-//import com.tftad.exception.ExtractorServerError;
-//import com.tftad.exception.InvalidRequest;
-//import com.tftad.exception.PostNotFound;
-//import com.tftad.repository.ChannelRepository;
-//import com.tftad.repository.MemberRepository;
-//import com.tftad.repository.PostRepository;
-//import com.tftad.repository.QuestionRepository;
-//import com.tftad.request.PostSearch;
-//import com.tftad.response.PostResponse;
-//import com.tftad.response.PostResponseDetail;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.DisplayName;
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.test.context.SpringBootTest;
-//
-//import java.util.Iterator;
-//import java.util.List;
-//import java.util.stream.Collectors;
-//import java.util.stream.IntStream;
-//
-//import static org.junit.jupiter.api.Assertions.*;
-//
-//@SpringBootTest
-//class PostServiceTest {
-//
-//    @Autowired
-//    private TestUtility testUtility;
-//
-//    @Autowired
-//    private PostService postService;
-//
-//    @Autowired
-//    private MemberService memberService;
-//
-//    @Autowired
-//    private PostRepository postRepository;
-//
-//    @Autowired
-//    private MemberRepository memberRepository;
-//
-//    @Autowired
-//    private ChannelRepository channelRepository;
-//
-//    @Autowired
-//    private QuestionRepository questionRepository;
-//
-//    @BeforeEach
-//    void clean() {
-//        questionRepository.deleteAll();
-//        postRepository.deleteAll();
-//        channelRepository.deleteAll();
-//        memberRepository.deleteAll();
-//    }
-//
-//    Member createMember() {
-//        return testUtility.createMember();
-//    }
-//
-//    Channel createChannel(Member member) {
-//        return testUtility.createChannel(member);
-//    }
-//
-//    Post createPost(Member member, Channel channel) {
-//        return testUtility.createPost(member, channel);
-//    }
-//
-//    @Test
-//    @DisplayName("post 저장")
-//    void test1() {
-//        Member member = createMember();
-//        Long memberId = member.getId();
-//
-//        Channel channel = createChannel(member);
-//        Long channelId = channel.getId();
-//
-//        PostCreateDto postCreateDto = PostCreateDto.builder()
-//                .title("제목")
-//                .content("내용")
-//                .videoId("videoId")
-//                .memberId(memberId)
-//                .build();
-//
-//        // when
-//        postService.savePost(postCreateDto, channel);
-//
-//        // then
-//        assertEquals(1L, postRepository.count());
-//        Post post = postRepository.findAll().iterator().next();
-//        assertEquals("제목", post.getTitle());
-//        assertEquals("내용", post.getContent());
-//        assertEquals("videoId", post.getVideoId());
-//    }
-//
-//    @Test
-//    @DisplayName("글 1개 조회")
-//    void test2() {
-//        Member member = createMember();
-//        Long memberId = member.getId();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//        Long postId = post.getId();
-//
-//        Question question1 = Question.builder()
-//                .endTime("111112")
-//                .startTime("010000")
-//                .authorIntention("hello1")
-//                .post(post)
-//                .build();
-//        Question question2 = Question.builder()
-//                .endTime("222223")
-//                .startTime("222222")
-//                .authorIntention("hello2")
-//                .post(post)
-//                .build();
-//        questionRepository.save(question1);
-//        questionRepository.save(question2);
-//
-//        // when
-//        PostResponseDetail response = postService.get(post.getId());
-//
-//        // then
-//        assertNotNull(response);
-//        assertEquals("제목", response.getPost().getTitle());
-//        assertEquals("내용", response.getPost().getContent());
-//        assertEquals("https://youtu.be/videoId", response.getPost().getVideoUrl());
-//        assertEquals("내용", response.getPost().getContent());
-//        assertFalse(response.getPost().getPublished());
-//        assertEquals("hello1", response.getQuestions().get(0).getAuthorIntention());
-//        assertEquals(3600, response.getQuestions().get(0).getStartTimeOnSecond());
-//        assertEquals("hello2", response.getQuestions().get(1).getAuthorIntention());
-//        assertEquals(memberId + "/" + postId + "/" + "222222_222223.mp4",
-//                response.getQuestions().get(1).getFilename());
-//    }
-//
-//    @Test
-//    @DisplayName("글 1페이지 조회")
-//    void test3() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        List<Post> requestPosts = IntStream.range(0, 30)
-//                .mapToObj(i -> Post.builder()
-//                        .title("제목" + i)
-//                        .content("내용" + i)
-//                        .videoId("videoId" + i)
-//                        .member(member)
-//                        .channel(channel)
-//                        .build())
-//                .collect(Collectors.toList());
-//        postRepository.saveAll(requestPosts);
-//
-//        PostSearch postSearch = PostSearch.builder()
-//                .build();
-//
-//        // when
-//        List<PostResponse> posts = postService.getList(postSearch);
-//
-//        // then
-//        assertEquals(10L, posts.size());
-//        assertEquals("제목29", posts.get(0).getTitle());
-//        assertEquals("제목20", posts.get(9).getTitle());
-//    }
-//
-//    @Test
-//    @DisplayName("글 제목만 수정")
-//    void test4() {
-//        Member member = createMember();
-//        Long memberId = member.getId();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//        Long postId = post.getId();
-//
-//        PostEditDto postEditDto = PostEditDto.builder()
-//                .title("수정제목")
-//                .content(null)
-//                .postId(postId)
-//                .memberId(memberId)
-//                .build();
-//
-//        // when
-//        postService.edit(postEditDto);
-//        Post changedPost = postRepository.findById(post.getId())
-//                .orElseThrow(() -> new RuntimeException("글이 존재하지 않습니다. id=" + post.getId()));
-//
-//        // then
-//        assertEquals("수정제목", changedPost.getTitle());
-//        assertEquals("내용", changedPost.getContent());
-//    }
-//
-//    @Test
-//    @DisplayName("글 내용 수정")
-//    void test5() {
-//        Member member = createMember();
-//        Long memberId = member.getId();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//        Long postId = post.getId();
-//
-//        PostEditDto postEditDto = PostEditDto.builder()
-//                .title(null)
-//                .content("수정내용")
-//                .postId(postId)
-//                .memberId(memberId)
-//                .build();
-//
-//        // when
-//        postService.edit(postEditDto);
-//        Post changedPost = postRepository.findById(post.getId())
-//                .orElseThrow(() -> new RuntimeException("글이 존재하지 않습니다. id=" + post.getId()));
-//
-//        // then
-//        assertEquals("제목", changedPost.getTitle());
-//        assertEquals("수정내용", changedPost.getContent());
-//    }
-//
-//    @Test
-//    @DisplayName("글 삭제")
-//    void test6() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        // when
-//        postService.delete(member.getId(), post.getId());
-//
-//        //then
-//        assertEquals(0, postRepository.count());
-//    }
-//
-//    @Test
-//    @DisplayName("글 1개 조회 - 존재하지 않는 글")
-//    void test7() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        // when then
-//        assertThrows(PostNotFound.class, () -> {
-//            postService.get(post.getId() + 1);
-//        });
-//    }
-//
-//    @Test
-//    @DisplayName("글 내용 수정 - 존재하지 않는 글")
-//    void test8_1() {
-//        Member member = createMember();
-//        Long memberId = member.getId();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//        Long postId = post.getId();
-//
-//        // when
-//        PostEditDto postEditDto = PostEditDto.builder()
-//                .postId(postId + 1).memberId(memberId).content("c").title("t").build();
-//
-//        // then
-//        assertThrows(PostNotFound.class, () -> {
-//            postService.edit(postEditDto);
-//        });
-//    }
-//
-//    @Test
-//    @DisplayName("글 내용 수정 - 작성자가 아닌 멤버")
-//    void test8_2() {
-//        Member member1 = createMember();
-//        Long memberId1 = member1.getId();
-//
-//        Member member2 = createMember();
-//        Long memberId2 = member2.getId();
-//
-//        Channel channel1 = createChannel(member1);
-//
-//        Post post1 = createPost(member1, channel1);
-//        Long postId1 = post1.getId();
-//
-//        // when
-//        PostEditDto postEditDto = PostEditDto.builder()
-//                .postId(postId1).memberId(memberId2).content("c").title("t").build();
-//
-//        // then
-//        assertThrows(InvalidRequest.class, () -> {
-//            postService.edit(postEditDto);
-//        });
-//    }
-//
-//    @Test
-//    @DisplayName("글 삭제 - 존재하지 않는 글")
-//    void test9_1() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        // when then
-//        assertThrows(PostNotFound.class, () -> {
-//            postService.delete(member.getId(), post.getId() + 1L);
-//        });
-//    }
-//
-//    @Test
-//    @DisplayName("글 삭제 - 작성자가 아닌 멤버")
-//    void test9_2() {
-//        Member member1 = createMember();
-//        Long memberId1 = member1.getId();
-//
-//        Member member2 = createMember();
-//        Long memberId2 = member2.getId();
-//
-//        Channel channel1 = createChannel(member1);
-//
-//        Post post = createPost(member1, channel1);
-//        Long postId = post.getId();
-//
-//        // when then
-//        assertThrows(InvalidRequest.class, () -> {
-//            postService.delete(memberId2, postId);
-//        });
-//    }
-//
-//    @Test
-//    @DisplayName("showPost 테스트")
-//    void test10() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post1 = createPost(member, channel);
-//        Post post2 = createPost(member, channel);
-//
-//        // when
-//        postService.showPost(post1.getId());
-//
-//        Iterator<Post> iterator = postRepository.findAll().iterator();
-//        Post foundPost1 = iterator.next();
-//        Post foundPost2 = iterator.next();
-//
-//        // then
-//        assertTrue(foundPost1.getPublished());
-//        assertFalse(foundPost2.getPublished());
-//    }
-//
-//    @Test
-//    @DisplayName("validatePublishedPost 테스트: publish 된 post")
-//    void test12() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        // when
-//        postService.showPost(post.getId());
-//
-//        // then
-//        assertThrows(InvalidRequest.class, () -> {
-//            postService.validatePublishedPost(post.getId());
-//        });
-//    }
-//
-//    @Test
-//    @DisplayName("validatePublishedPost 테스트: 존재하지 않는 post")
-//    void test13() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        // when then
-//        assertThrows(InvalidRequest.class, () -> {
-//            postService.validatePublishedPost(post.getId() + 1); //
-//        });
-//    }
-//
-//    @Test
-//    @DisplayName("validatePublishedPost 테스트: unpublished")
-//    void test14() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        // when then
-//        assertDoesNotThrow(() -> postService.validatePublishedPost(post.getId()));
-//
-//    }
-//
-//    @Test
-//    @DisplayName("validatePostedVideo 테스트: 등록되지 않은 비디오")
-//    void test15() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//        postService.showPost(post.getId());
-//
-//        PostCreateDto postCreateDto = PostCreateDto.builder()
-//                .videoId(post.getVideoId() + "other")
-//                .memberId(post.getMember().getId())
-//                .content(post.getContent())
-//                .title(post.getTitle())
-//                .build();
-//
-//        // when then
-//        assertDoesNotThrow(() -> postService.validatePostedVideo(postCreateDto.getVideoId()));
-//    }
-//
-//    @Test
-//    @DisplayName("validatePostedVideo 테스트: 등록된 비디오")
-//    void test16() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        PostCreateDto postCreateDto = PostCreateDto.builder()
-//                .videoId(post.getVideoId())
-//                .memberId(post.getMember().getId())
-//                .content(post.getContent())
-//                .title(post.getTitle())
-//                .build();
-//
-//        // when then
-//        assertThrows(InvalidRequest.class, () -> postService.validatePostedVideo(postCreateDto.getVideoId()));
-//    }
-//
-//    @Test
-//    @DisplayName("validateToGetPosition 테스트: 본인 게시글인 경우")
-//    void test17() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        // when then
-//        assertDoesNotThrow(() -> postService.validateToGetPosition(member.getId(), post.getId()));
-//    }
-//
-//    @Test
-//    @DisplayName("validateToGetPosition 테스트: 본인 게시글이 아닌 경우")
-//    void test18() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        // when then
-//        assertThrows(InvalidRequest.class, () -> {
-//            postService.validateToGetPosition(member.getId() + 1L, post.getId());
-//        });
-//    }
-//
-//    @Test
-//    @DisplayName("validateExtractorResultOrDeletePost 테스트: 정상")
-//    void test19() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        List<String> result = List.of("1", "2", "3", "4");
-//
-//        // when
-//        assertDoesNotThrow(() -> postService.validateExtractorResultOrDeletePost(post.getId(), result));
-//
-//        // then
-//        assertEquals(1L, postRepository.count());
-//    }
-//
-//    @Test
-//    @DisplayName("validateExtractorResultOrDeletePost 테스트: 홀수 result")
-//    void test20() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        List<String> result = List.of("1", "2", "3");
-//
-//        // when
-//        assertThrows(ExtractorServerError.class, () -> {
-//            postService.validateExtractorResultOrDeletePost(post.getId(), result);
-//        });
-//
-//        // then
-//        assertEquals(0L, postRepository.count());
-//    }
-//
-//    @Test
-//    @DisplayName("validateExtractorResultOrDeletePost 테스트: empty result")
-//    void test21() {
-//        Member member = createMember();
-//
-//        Channel channel = createChannel(member);
-//
-//        Post post = createPost(member, channel);
-//
-//        List<String> result = List.of();
-//
-//        // when
-//        assertThrows(ExtractorServerError.class, () -> {
-//            postService.validateExtractorResultOrDeletePost(post.getId(), result);
-//        });
-//
-//        // then
-//        assertEquals(0L, postRepository.count());
-//    }
-//}
+package com.tftad.service;
+
+import com.tftad.TestUtility;
+import com.tftad.config.data.AuthenticatedMember;
+import com.tftad.domain.*;
+import com.tftad.exception.ChannelNotFound;
+import com.tftad.exception.InvalidRequest;
+import com.tftad.exception.MemberNotFound;
+import com.tftad.exception.PostNotFound;
+import com.tftad.repository.ChannelRepository;
+import com.tftad.repository.MemberRepository;
+import com.tftad.repository.PostRepository;
+import com.tftad.repository.QuestionRepository;
+import com.tftad.request.PostEdit;
+import com.tftad.request.QuestionEdit;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Iterator;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
+@SpringBootTest
+@RunWith(SpringRunner.class)
+@AutoConfigureMockMvc
+class PostServiceTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private TestUtility testUtility;
+
+    @MockBean
+    private OAuthService oAuthService;
+
+    @MockBean
+    private AuthService authService;
+
+    @Autowired
+    private PostService postService;
+
+    @MockBean
+    private QuestionByLifecycleOfPostService questionByLifecycleOfPostService;
+
+    @Autowired
+    private PostRepository postRepository;
+    @Autowired
+    private MemberRepository memberRepository;
+    @Autowired
+    private ChannelRepository channelRepository;
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    private Member member;
+    private Channel channel;
+    private AuthenticatedMember authenticatedMember;
+    private PostCreateDto postCreateDto;
+    private Long setupPostId;
+
+    @BeforeEach
+    void setup() {
+        questionRepository.deleteAll();
+        postRepository.deleteAll();
+        channelRepository.deleteAll();
+        memberRepository.deleteAll();
+
+        member = testUtility.createMember();
+        memberRepository.save(member);
+
+        channel = testUtility.createChannel(member);
+        channelRepository.save(channel);
+
+        Post post = testUtility.createPost(member, channel);
+        setupPostId = postRepository.save(post).getId();
+
+        authenticatedMember = AuthenticatedMember.builder()
+                .id(member.getId())
+                .build();
+    }
+
+    @Test
+    @DisplayName("게시글 작성 성공")
+    void test1() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelId");
+
+        postCreateDto = PostCreateDto.builder()
+                .title("title")
+                .content("content")
+                .videoId("videoIdForNew")
+                .build();
+
+        // when
+        postService.write(postCreateDto, authenticatedMember);
+
+        // then
+        assertThat(postRepository.count()).isEqualTo(2L);
+        Iterator<Post> iterator = postRepository.findAll().iterator();
+        iterator.next();
+        Post post = iterator.next();
+        assertThat(post.getMemberId()).isEqualTo(member.getId());
+        assertThat(post.getChannelId()).isEqualTo(channel.getId());
+        assertThat(post.getTitle()).isEqualTo("title");
+        assertThat(post.getVideoId()).isEqualTo("videoIdForNew");
+        assertThat(post.getPublished()).isFalse();
+        assertThat(post.getContent()).isEqualTo("content");
+    }
+
+    @Test
+    @DisplayName("작성 실패 - 인증되지 않은 멤버")
+    void test2() {
+        when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
+        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelId");
+
+        postCreateDto = PostCreateDto.builder()
+                .title("title")
+                .content("content")
+                .videoId("videoIdForNew")
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.write(postCreateDto, authenticatedMember);
+        }).isInstanceOf(MemberNotFound.class);
+    }
+
+    @Test
+    @DisplayName("작성 실패 - 동일 비디오로 작성된 게시물이 존재하는 경우")
+    void test3() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelId");
+
+        postCreateDto = PostCreateDto.builder()
+                .title("title")
+                .content("content")
+                .videoId("videoIdForNew")
+                .build();
+
+        postService.write(postCreateDto, authenticatedMember);
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.write(postCreateDto, authenticatedMember);
+        }).isInstanceOf(InvalidRequest.class);
+    }
+
+    @Test
+    @DisplayName("작성 실패 - youtubeVideoUrl로 OAuth youtubeChannelId 조회에 실패한 경우")
+    void test4() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenThrow(InvalidRequest.class);
+
+        postCreateDto = PostCreateDto.builder()
+                .title("title")
+                .content("content")
+                .videoId("videoIdForNew")
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.write(postCreateDto, authenticatedMember);
+        }).isInstanceOf(InvalidRequest.class);
+    }
+
+    @Test
+    @DisplayName("작성 실패 - OAuth로 조회된 채널이 본 서비스에 등록되지 않은 경우")
+    void test5() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelIdOther");
+
+        postCreateDto = PostCreateDto.builder()
+                .title("title")
+                .content("content")
+                .videoId("videoIdForNew")
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.write(postCreateDto, authenticatedMember);
+        }).isInstanceOf(ChannelNotFound.class);
+    }
+
+    @Test
+    @DisplayName("작성 실패 - 채널의 소유자가 아닌 경우")
+    void test6() {
+        Member otherMember = testUtility.createMember();
+        memberRepository.save(otherMember);
+
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(otherMember);
+        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelId");
+
+        postCreateDto = PostCreateDto.builder()
+                .title("title")
+                .content("content")
+                .videoId("videoIdForNew")
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.write(postCreateDto, authenticatedMember);
+        }).isInstanceOf(InvalidRequest.class);
+    }
+
+    @Test
+    @DisplayName("게시글 수정 성공")
+    void test7() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+
+        QuestionEdit questionEdit = QuestionEdit.builder()
+                .questionId(1L)
+                .authorIntention("authorIntentionUpdate")
+                .build();
+
+        PostEdit postEdit = PostEdit.builder()
+                .title("titleUpdate")
+                .content("contentUpdate")
+                .questionEdits(List.of(questionEdit))
+                .build();
+
+        // when
+        postService.edit(setupPostId, postEdit, authenticatedMember);
+
+        // then
+        assertThat(postRepository.count()).isEqualTo(1L);
+        Post post = postRepository.findAll().iterator().next();
+        assertThat(post.getTitle()).isEqualTo("titleUpdate");
+        assertThat(post.getContent()).isEqualTo("contentUpdate");
+    }
+
+    @Test
+    @DisplayName("수정 실패 - 인증되지 않은 멤버")
+    void test8() {
+        when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
+
+        QuestionEdit questionEdit = QuestionEdit.builder()
+                .questionId(1L)
+                .authorIntention("authorIntentionUpdate")
+                .build();
+
+        PostEdit postEdit = PostEdit.builder()
+                .title("titleUpdate")
+                .content("contentUpdate")
+                .questionEdits(List.of(questionEdit))
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.edit(setupPostId, postEdit, authenticatedMember);
+        }).isInstanceOf(MemberNotFound.class);
+    }
+
+    @Test
+    @DisplayName("수정 실패 - 존재하지 않는 게시물")
+    void test9() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+
+        QuestionEdit questionEdit = QuestionEdit.builder()
+                .questionId(1L)
+                .authorIntention("authorIntentionUpdate")
+                .build();
+
+        PostEdit postEdit = PostEdit.builder()
+                .title("titleUpdate")
+                .content("contentUpdate")
+                .questionEdits(List.of(questionEdit))
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.edit(setupPostId + 100L, postEdit, authenticatedMember);
+        }).isInstanceOf(PostNotFound.class);
+    }
+
+
+    @Test
+    @DisplayName("수정 실패 - 소유자가 아닌 멤버")
+    void test10() {
+        Member otherMember = testUtility.createMember();
+        memberRepository.save(otherMember);
+
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(otherMember);
+
+        QuestionEdit questionEdit = QuestionEdit.builder()
+                .questionId(1L)
+                .authorIntention("authorIntentionUpdate")
+                .build();
+
+        PostEdit postEdit = PostEdit.builder()
+                .title("titleUpdate")
+                .content("contentUpdate")
+                .questionEdits(List.of(questionEdit))
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.edit(setupPostId, postEdit, authenticatedMember);
+        }).isInstanceOf(InvalidRequest.class);
+    }
+
+    @Test
+    @DisplayName("수정 실패 - question 수정중 exception 발생")
+    void test11() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        doThrow(InvalidRequest.class).when(questionByLifecycleOfPostService)
+                .editQuestionsOfPost(anyLong(), any(PostEdit.class));
+
+        QuestionEdit questionEdit = QuestionEdit.builder()
+                .questionId(1L)
+                .authorIntention("authorIntentionUpdate")
+                .build();
+
+        PostEdit postEdit = PostEdit.builder()
+                .title("titleUpdate")
+                .content("contentUpdate")
+                .questionEdits(List.of(questionEdit))
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.edit(setupPostId, postEdit, authenticatedMember);
+        }).isInstanceOf(InvalidRequest.class);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 성공")
+    void test12() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+
+        // when
+        postService.delete(setupPostId, authenticatedMember);
+
+        // then
+        assertThat(postRepository.count()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("삭제 실패 - 인증되지 않은 멤버")
+    void test13() {
+        when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.delete(setupPostId, authenticatedMember);
+        }).isInstanceOf(MemberNotFound.class);
+    }
+
+    @Test
+    @DisplayName("삭제 실패 - 존재하지 않는 게시물")
+    void test14() {
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.delete(setupPostId + 100L, authenticatedMember);
+        }).isInstanceOf(PostNotFound.class);
+    }
+
+    @Test
+    @DisplayName("삭제 실패 - 소유자가 아닌 멤버")
+    void test15() {
+        Member otherMember = testUtility.createMember();
+        memberRepository.save(otherMember);
+
+        when(authService.check(any(AuthenticatedMember.class))).thenReturn(otherMember);
+
+        // when then
+        assertThatThrownBy(() -> {
+            postService.delete(setupPostId, authenticatedMember);
+        }).isInstanceOf(InvalidRequest.class);
+    }
+}

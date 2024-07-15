@@ -79,7 +79,6 @@ public class PostService {
         return postRepository.getPostWithDetails(postId).orElseThrow(PostNotFound::new);
     }
 
-    @Transactional
     public PostResponse getSimple(Long postId) {
         return new PostResponse(findPost(postId));
     }
