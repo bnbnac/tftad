@@ -32,7 +32,6 @@ public class PostService {
     private final OAuthService oAuthService;
     private final QuestionByLifecycleOfPostService questionByLifecycleOfPostService;
 
-    @Transactional
     public Long write(PostCreateDto postCreateDto, AuthenticatedMember authenticatedMember) {
         Member member = authService.check(authenticatedMember);
 
@@ -82,8 +81,7 @@ public class PostService {
 
     @Transactional
     public PostResponse getSimple(Long postId) {
-        Post post = findPost(postId);
-        return new PostResponse(post);
+        return new PostResponse(findPost(postId));
     }
 
     @Transactional

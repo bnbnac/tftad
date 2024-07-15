@@ -15,23 +15,10 @@ public class ChannelController {
     private final ChannelService channelService;
     private final OAuthService oAuthService;
 
-    private ChannelCreateDto createChannelCreateDto(JsonNode channelResource) {
-        JsonNode channelItem = channelResource.get("items").get(0);
-        String youtubeChannelId = channelItem.get("id").asText();
-        String channelTitle = channelItem.get("snippet").get("title").asText();
-        String thumbnail = channelItem.get("snippet").get("thumbnails").get("default").get("url").asText();
-
-        return ChannelCreateDto.builder()
-                .youtubeChannelId(youtubeChannelId)
-                .channelTitle(channelTitle)
-                .thumbnail(thumbnail)
-                .build();
-    }
-
     @PostMapping("/channels")
     public void addChannel(AuthenticatedMember authenticatedMember, @RequestParam String code) {
         JsonNode channelResource = oAuthService.queryChannelResource(code);
-        ChannelCreateDto channelCreateDto = createChannelCreateDto(channelResource);
+        ChannelCreateDto channelCreateDto = channelService.createChannelCreateDto(channelResource);
 
         channelService.addChannel(channelCreateDto, authenticatedMember);
     }

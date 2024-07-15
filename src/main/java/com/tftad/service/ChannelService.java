@@ -1,5 +1,6 @@
 package com.tftad.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.domain.Channel;
 import com.tftad.domain.ChannelCreateDto;
@@ -83,6 +84,23 @@ public class ChannelService {
     private void validateChannelOwner(Long memberId, Channel channel) {
         if (!channel.isOwnedBy(memberId)) {
             throw new InvalidRequest("channel", "소유자가 아닙니다");
+        }
+    }
+
+    public ChannelCreateDto createChannelCreateDto(JsonNode channelResource) {
+        try {
+            JsonNode channelItem = channelResource.get("items").get(0);
+            String youtubeChannelId = channelItem.get("id").asText();
+            String channelTitle = channelItem.get("snippet").get("title").asText();
+            String thumbnail = channelItem.get("snippet").get("thumbnails").get("default").get("url").asText();
+
+            return ChannelCreateDto.builder()
+                    .youtubeChannelId(youtubeChannelId)
+                    .channelTitle(channelTitle)
+                    .thumbnail(thumbnail)
+                    .build();
+        } catch (NullPointerException e) {
+            throw new InvalidRequest("oauth", "failed to get youtube channel information");
         }
     }
 }

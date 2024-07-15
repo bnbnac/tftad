@@ -55,6 +55,17 @@ public class OAuthService {
                 .asText();
     }
 
+    public String getYoutubeChannelId(String videoId) {
+        try {
+            JsonNode videoResource = queryVideoResource(videoId);
+            String videoDuration = extractVideoDuration(videoResource);
+            validateVideoDuration(videoDuration);
+            return extractYoutubeChannelId(videoResource);
+        } catch (NullPointerException e) {
+            throw new InvalidRequest("url", "failed to get youtube channel id");
+        }
+    }
+
     private JsonNode queryVideoResource(String videoId) {
         WebClient client = WebClient.create();
 
@@ -73,6 +84,14 @@ public class OAuthService {
                 .getBody();
     }
 
+    private String extractVideoDuration(JsonNode videoResource) {
+        return videoResource.get("items")
+                .get(0)
+                .get("contentDetails")
+                .get("duration")
+                .asText();
+    }
+
     private void validateVideoDuration(String durationString) {
         Duration duration = Duration.parse(durationString);
         long durationMinutes = duration.toMinutes();
@@ -82,26 +101,11 @@ public class OAuthService {
         }
     }
 
-    private String extractVideoDuration(JsonNode videoResource) {
-        return videoResource.get("items")
-                .get(0)
-                .get("contentDetails")
-                .get("duration")
-                .asText();
-    }
-
     private String extractYoutubeChannelId(JsonNode videoResource) {
         return videoResource.get("items")
                 .get(0)
                 .get("snippet")
                 .get("channelId")
                 .asText();
-    }
-
-    public String getYoutubeChannelId(String videoId) {
-        JsonNode videoResource = queryVideoResource(videoId);
-        String videoDuration = extractVideoDuration(videoResource);
-        validateVideoDuration(videoDuration);
-        return extractYoutubeChannelId(videoResource);
     }
 }
