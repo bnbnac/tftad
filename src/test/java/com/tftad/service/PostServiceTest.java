@@ -2,7 +2,10 @@ package com.tftad.service;
 
 import com.tftad.TestUtility;
 import com.tftad.config.data.AuthenticatedMember;
-import com.tftad.domain.*;
+import com.tftad.domain.Channel;
+import com.tftad.domain.Member;
+import com.tftad.domain.Post;
+import com.tftad.domain.PostCreateDto;
 import com.tftad.exception.ChannelNotFound;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.MemberNotFound;
@@ -16,12 +19,10 @@ import com.tftad.request.QuestionEdit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Iterator;
@@ -31,10 +32,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 class PostServiceTest {
 
