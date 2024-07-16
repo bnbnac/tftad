@@ -71,7 +71,7 @@ public class ChannelService {
     }
 
     @Transactional
-    public void deleteChannel(Long channelId, AuthenticatedMember authenticatedMember) {
+    public void delete(Long channelId, AuthenticatedMember authenticatedMember) {
         Member member = authService.check(authenticatedMember);
         Channel channel = findChannel(channelId);
         validateChannelOwner(member.getId(), channel);

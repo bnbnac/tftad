@@ -25,7 +25,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Iterator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -85,8 +84,8 @@ class PostServiceTest {
         channel = testUtility.createChannel(member);
         channelRepository.save(channel);
 
-        Post post = testUtility.createPost(member, channel);
-        setupPostId = postRepository.save(post).getId();
+        Post setupPost = testUtility.createPost(member, channel);
+        setupPostId = postRepository.save(setupPost).getId();
 
         authenticatedMember = AuthenticatedMember.builder()
                 .id(member.getId())
@@ -97,26 +96,23 @@ class PostServiceTest {
     @DisplayName("게시글 작성 성공")
     void test1() {
         when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
-        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelId");
+        when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelId");
 
         postCreateDto = PostCreateDto.builder()
                 .title("title")
                 .content("content")
-                .videoId("videoIdForNew")
+                .videoId("videoIdNew")
                 .build();
 
         // when
         postService.write(postCreateDto, authenticatedMember);
 
         // then
-        assertThat(postRepository.count()).isEqualTo(2L);
-        Iterator<Post> iterator = postRepository.findAll().iterator();
-        iterator.next();
-        Post post = iterator.next();
+        Post post = postRepository.findById(setupPostId + 1L).get();
         assertThat(post.getMemberId()).isEqualTo(member.getId());
         assertThat(post.getChannelId()).isEqualTo(channel.getId());
         assertThat(post.getTitle()).isEqualTo("title");
-        assertThat(post.getVideoId()).isEqualTo("videoIdForNew");
+        assertThat(post.getVideoId()).isEqualTo("videoIdNew");
         assertThat(post.getPublished()).isFalse();
         assertThat(post.getContent()).isEqualTo("content");
     }
@@ -125,12 +121,12 @@ class PostServiceTest {
     @DisplayName("작성 실패 - 인증되지 않은 멤버")
     void test2() {
         when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
-        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelId");
+        when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelId");
 
         postCreateDto = PostCreateDto.builder()
                 .title("title")
                 .content("content")
-                .videoId("videoIdForNew")
+                .videoId("videoIdNew")
                 .build();
 
         // when then
@@ -143,12 +139,12 @@ class PostServiceTest {
     @DisplayName("작성 실패 - 동일 비디오로 작성된 게시물이 존재하는 경우")
     void test3() {
         when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
-        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelId");
+        when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelId");
 
         postCreateDto = PostCreateDto.builder()
                 .title("title")
                 .content("content")
-                .videoId("videoIdForNew")
+                .videoId("videoIdNew")
                 .build();
 
         postService.write(postCreateDto, authenticatedMember);
@@ -163,12 +159,12 @@ class PostServiceTest {
     @DisplayName("작성 실패 - youtubeVideoUrl로 OAuth youtubeChannelId 조회에 실패한 경우")
     void test4() {
         when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
-        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenThrow(InvalidRequest.class);
+        when(oAuthService.getYoutubeChannelId("videoIdNew")).thenThrow(InvalidRequest.class);
 
         postCreateDto = PostCreateDto.builder()
                 .title("title")
                 .content("content")
-                .videoId("videoIdForNew")
+                .videoId("videoIdNew")
                 .build();
 
         // when then
@@ -181,12 +177,12 @@ class PostServiceTest {
     @DisplayName("작성 실패 - OAuth로 조회된 채널이 본 서비스에 등록되지 않은 경우")
     void test5() {
         when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
-        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelIdOther");
+        when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelIdOther");
 
         postCreateDto = PostCreateDto.builder()
                 .title("title")
                 .content("content")
-                .videoId("videoIdForNew")
+                .videoId("videoIdNew")
                 .build();
 
         // when then
@@ -202,12 +198,12 @@ class PostServiceTest {
         memberRepository.save(otherMember);
 
         when(authService.check(any(AuthenticatedMember.class))).thenReturn(otherMember);
-        when(oAuthService.getYoutubeChannelId("videoIdForNew")).thenReturn("youtubeChannelId");
+        when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelId");
 
         postCreateDto = PostCreateDto.builder()
                 .title("title")
                 .content("content")
-                .videoId("videoIdForNew")
+                .videoId("videoIdNew")
                 .build();
 
         // when then
@@ -236,8 +232,7 @@ class PostServiceTest {
         postService.edit(setupPostId, postEdit, authenticatedMember);
 
         // then
-        assertThat(postRepository.count()).isEqualTo(1L);
-        Post post = postRepository.findAll().iterator().next();
+        Post post = postRepository.findById(setupPostId).get();
         assertThat(post.getTitle()).isEqualTo("titleUpdate");
         assertThat(post.getContent()).isEqualTo("contentUpdate");
     }

@@ -25,6 +25,6 @@ public class ChannelController {
 
     @DeleteMapping("/channels/{channelId}")
     public void delete(AuthenticatedMember authenticatedMember, @PathVariable Long channelId) {
-        channelService.deleteChannel(channelId, authenticatedMember);
+        channelService.delete(channelId, authenticatedMember);
     }
 }

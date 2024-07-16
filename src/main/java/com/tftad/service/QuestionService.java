@@ -21,6 +21,7 @@ public class QuestionService {
     private final AuthService authService;
     private final QuestionRepository questionRepository;
 
+    @Transactional
     public void editQuestion(QuestionEdit questionEdit, Long postId) {
         Question question = findQuestion(questionEdit.getQuestionId());
         validateQuestionInPost(question, postId);

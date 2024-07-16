@@ -30,12 +30,29 @@ public class TestUtility {
                 .build();
     }
 
+    public Member createDeletedMember() {
+        return Member.builder()
+                .email("emailDeleted")
+                .password("password")
+                .name("name")
+                .build();
+    }
+
     public Channel createChannel(Member member) {
         return Channel.builder()
                 .thumbnail("thumbnail")
                 .youtubeChannelId("youtubeChannelId")
                 .channelTitle("channelTitle")
                 .memberId(member.getId())
+                .build();
+    }
+
+    public Channel createDeletedChannel() {
+        return Channel.builder()
+                .thumbnail("thumbnail")
+                .youtubeChannelId("youtubeChannelIdDeleted")
+                .channelTitle("channelTitle")
+                .memberId(-1L)
                 .build();
     }
 

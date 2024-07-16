@@ -12,7 +12,7 @@ public class ChannelCreateDto {
     private final String thumbnail;
 
     @Builder
-    public ChannelCreateDto(Long memberId, String channelTitle, String youtubeChannelId, String thumbnail) {
+    public ChannelCreateDto(String channelTitle, String youtubeChannelId, String thumbnail) {
         Assert.hasText(channelTitle, "channel title must not be null");
         Assert.hasText(youtubeChannelId, "youtube channel id must not be null");
 
