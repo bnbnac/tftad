@@ -6,7 +6,6 @@ import com.tftad.service.AuthCodeSendService;
 import com.tftad.service.CodeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,7 +24,7 @@ public class CodeController {
         codeService.create(authCode, mailSend.getEmail());
     }
 
-    @GetMapping("/code/mail")
+    @PostMapping("/code/mail/verification")
     public void mailVerify(@RequestBody MailVerify mailVerify) {
         codeService.verify(mailVerify.getAuthCode(), mailVerify.getEmail());
     }

@@ -34,6 +34,7 @@ class AuthServiceTest {
     private MemberRepository memberRepository;
 
     private Code code;
+
     @BeforeEach
     void clean() {
         memberRepository.deleteAll();
@@ -150,7 +151,6 @@ class AuthServiceTest {
             authService.signup(signup);
         }).isInstanceOf(InvalidRequest.class);
     }
-
 
 
 //      check(), login() test

@@ -32,7 +32,7 @@ public class MailAuthCodeSendService implements AuthCodeSendService {
             message.setFrom(AuthProperty.MAIL_SENDER);
             message.setRecipients(MimeMessage.RecipientType.TO, toMail);
             message.setSubject("이메일 인증");
-            message.setText(generateEmailBody(code),"UTF-8", "html");
+            message.setText(generateEmailBody(code), "UTF-8", "html");
         } catch (MessagingException e) {
             e.printStackTrace();
         }
