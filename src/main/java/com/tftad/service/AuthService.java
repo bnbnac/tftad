@@ -64,7 +64,7 @@ public class AuthService {
     }
 
     private Code findCode(String code, String email) {
-        return codeRepository.findByCodeAndEmailOrderByCreatedAtDesc(code, email)
+        return codeRepository.findTopByCodeAndEmailOrderByCreatedAtDesc(code, email)
                 .orElseThrow(() -> {
                     throw new InvalidRequest("email", "인증되지 않은 이메일입니다.");
                 });
@@ -78,7 +78,7 @@ public class AuthService {
 
     private void validateAuthedCode(Code foundCode) {
         if (!foundCode.isAuthed()) {
-            throw new InvalidRequest("email", "인증코드를 확인해주세요.");
+            throw new InvalidRequest("email", "인증코드를 생성후 인증해주세요.");
         }
     }
 }

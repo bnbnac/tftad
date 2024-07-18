@@ -36,8 +36,13 @@ public class CodeService {
     @Transactional
     public void verify(String authCode, String authMail) {
         Code foundCode = codeRepository.findTopByEmailOrderByCreatedAtDesc(authMail).orElseThrow(CodeNotFound::new);
-        validateCode(authCode, foundCode);
-        validateCodeExpiration(foundCode);
+
+        try {
+            validateCode(authCode, foundCode);
+            validateCodeExpiration(foundCode);
+        } catch (InvalidRequest e) {
+            codeRepository.delete(foundCode);
+        }
 
         foundCode.auth();
     }

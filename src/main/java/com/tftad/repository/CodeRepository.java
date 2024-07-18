@@ -13,5 +13,5 @@ public interface CodeRepository extends JpaRepository<Code, Long> {
 
     Optional<Code> findTopByEmailOrderByCreatedAtDesc(String email);
 
-    Optional<Code> findByCodeAndEmailOrderByCreatedAtDesc(String code, String email);
+    Optional<Code> findTopByCodeAndEmailOrderByCreatedAtDesc(String code, String email);
 }
