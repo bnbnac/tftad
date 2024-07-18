@@ -16,4 +16,7 @@ public class Signup {
 
     @NotBlank(message = "비밀번호를 입력해주세요")
     private String password;
+
+    @NotBlank(message = "인증코드를 입력해주세요")
+    private String code;
 }
