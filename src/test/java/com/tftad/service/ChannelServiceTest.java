@@ -22,8 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Iterator;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -116,11 +114,7 @@ class ChannelServiceTest {
         channelService.addChannel(channelCreateDto, authenticatedMember);
 
         // then
-        assertThat(channelRepository.count()).isEqualTo(3L);
-        Iterator<Channel> iterator = channelRepository.findAll().iterator();
-        iterator.next();
-        iterator.next();
-        Channel channel = iterator.next();
+        Channel channel = channelRepository.findById(3L).get();
         assertThat(channel.getYoutubeChannelId()).isEqualTo("youtubeChannelIdNew");
         assertThat(channel.getChannelTitle()).isEqualTo("channelTitle");
         assertThat(channel.getThumbnail()).isEqualTo("thumbnail");

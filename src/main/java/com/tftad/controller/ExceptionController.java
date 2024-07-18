@@ -21,6 +21,8 @@ public class ExceptionController {
     @ExceptionHandler(TftadException.class)
     @ResponseBody
     public ResponseEntity<ErrorResponse> tftadException(TftadException e) {
+        log.error("TftadException: {}", e.getMessage(), e);
+
         ErrorResponse body = ErrorResponse.builder()
                 .code(String.valueOf(e.getStatusCode()))
                 .message(e.getMessage())
@@ -34,10 +36,12 @@ public class ExceptionController {
                 .body(body);
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ErrorResponse invalidRequestHandler(MethodArgumentNotValidException e) {
+        log.error("MethodArgumentNotValidException: {}", e.getMessage(), e);
+
         ErrorResponse response = ErrorResponse.builder()
                 .code("400")
                 .message("잘못된 요청입니다")
