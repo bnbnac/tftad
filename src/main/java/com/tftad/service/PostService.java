@@ -29,11 +29,13 @@ public class PostService {
     private final AuthService authService;
     private final PostRepository postRepository;
     private final ChannelRepository channelRepository;
+    private final MemberService memberService;
     private final OAuthService oAuthService;
     private final QuestionByLifecycleOfPostService questionByLifecycleOfPostService;
 
     public Long write(PostCreateDto postCreateDto, AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = memberService.findMember(authenticatedMember);
 
         validatePostedVideo(postCreateDto.getVideoId());
         String youtubeChannelId = oAuthService.getYoutubeChannelId(postCreateDto.getVideoId());
@@ -99,7 +101,8 @@ public class PostService {
 
     @Transactional
     public void edit(Long postId, PostEdit postEdit, AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = memberService.findMember(authenticatedMember);
         editPost(postId, postEdit, member.getId());
 
         questionByLifecycleOfPostService.editQuestionsOfPost(postId, postEdit);
@@ -127,7 +130,8 @@ public class PostService {
 
     @Transactional
     public void delete(Long postId, AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = memberService.findMember(authenticatedMember);
         Post post = findPost(postId);
         validatePostOwner(member.getId(), post);
 
@@ -160,7 +164,8 @@ public class PostService {
 
     @Transactional
     public boolean isPublishedPostOwner(Long postId, AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = memberService.findMember(authenticatedMember);
         Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
 
         validatePostOwner(member.getId(), post);

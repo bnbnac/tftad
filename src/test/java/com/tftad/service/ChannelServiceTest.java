@@ -40,7 +40,7 @@ class ChannelServiceTest {
     @MockBean
     private OAuthService oAuthService;
 
-    @MockBean
+    @Autowired
     private AuthService authService;
 
     @MockBean
@@ -102,7 +102,7 @@ class ChannelServiceTest {
     @Test
     @DisplayName("신규채널 등록 성공")
     void test1() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         channelCreateDto = ChannelCreateDto.builder()
                 .youtubeChannelId("youtubeChannelIdNew")
@@ -123,7 +123,7 @@ class ChannelServiceTest {
     @Test
     @DisplayName("채널 등록 실패 - 인증되지 않은 멤버")
     void test2() {
-        when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
 
         channelCreateDto = ChannelCreateDto.builder()
                 .youtubeChannelId("youtubeChannelIdNew")
@@ -140,7 +140,7 @@ class ChannelServiceTest {
     @Test
     @DisplayName("기존채널 등록 성공")
     void test3() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         channelCreateDto = ChannelCreateDto.builder()
                 .youtubeChannelId("youtubeChannelIdDeleted")
@@ -161,7 +161,7 @@ class ChannelServiceTest {
     @Test
     @DisplayName("기존채널 등록 실패 - 다른 멤버가 소유한 채널")
     void test4() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         channelCreateDto = ChannelCreateDto.builder()
                 .youtubeChannelId("youtubeChannelId")
@@ -178,7 +178,7 @@ class ChannelServiceTest {
     @Test
     @DisplayName("기존채널 등록 실패 - 다른 멤버가 소유한 채널")
     void test5() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         channelCreateDto = ChannelCreateDto.builder()
                 .youtubeChannelId("youtubeChannelId")
@@ -195,7 +195,7 @@ class ChannelServiceTest {
     @Test
     @DisplayName("채널 삭제 성공 - DELETED_MEMBER에 인계")
     void test6() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
         when(memberService.getDeletedMember()).thenReturn(deletedMember);
 
         // when
@@ -209,7 +209,7 @@ class ChannelServiceTest {
     @Test
     @DisplayName("채널 삭제 실패 - 인증되지 않은 멤버")
     void test7() {
-        when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
 
         // when then
         assertThatThrownBy(() -> {
@@ -220,7 +220,7 @@ class ChannelServiceTest {
     @Test
     @DisplayName("채널 삭제 실패 - 존재하지 않는 채널")
     void test8() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         // when then
         assertThatThrownBy(() -> {
@@ -234,7 +234,7 @@ class ChannelServiceTest {
         Member otherMember = testUtility.createMember();
         memberRepository.save(otherMember);
 
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(otherMember);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(otherMember);
 
         // when then
         assertThatThrownBy(() -> {

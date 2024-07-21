@@ -23,7 +23,8 @@ public class ChannelService {
 
     @Transactional
     public void addChannel(ChannelCreateDto channelCreateDto, AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = memberService.findMember(authenticatedMember);
 
         if (isNewChannel(channelCreateDto)) {
             saveChannel(channelCreateDto, member);
@@ -72,7 +73,8 @@ public class ChannelService {
 
     @Transactional
     public void delete(Long channelId, AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = memberService.findMember(authenticatedMember);
         Channel channel = findChannel(channelId);
         validateChannelOwner(member.getId(), channel);
 

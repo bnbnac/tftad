@@ -22,7 +22,7 @@ public class MailAuthCodeSendService implements AuthCodeSendService {
     }
 
     private String createCode() {
-        return String.valueOf((int) (Math.random() * 900_000) + 100_000);
+        return String.valueOf((int) (Math.random() * 90_000_000) + 10_000_000);
     }
 
     private MimeMessage CreateMessage(String code, String toMail) {

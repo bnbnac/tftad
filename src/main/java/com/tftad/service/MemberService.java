@@ -30,13 +30,15 @@ public class MemberService {
 
     @Transactional
     public MemberResponseDetail getMemberDetails(AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = findMember(authenticatedMember);
         return memberRepository.getMemberWithDetails(member.getId());
     }
 
     @Transactional
     public void edit(Long memberId, MemberEdit memberEdit, AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = findMember(authenticatedMember);
         validateMemberOwner(memberId, authenticatedMember);
 
         String password = null;
@@ -63,5 +65,16 @@ public class MemberService {
     public Member getDeletedMember() {
         return memberRepository.findById(-1L)
                 .orElseThrow(() -> new InvalidRequest("memberId", "no member with id -1"));
+    }
+
+    public void validateSignedUpMail(String email) {
+        memberRepository.findByEmail(email)
+                .ifPresent(m -> {
+                    throw new InvalidRequest("email", "이미 가입된 이메일입니다");
+                });
+    }
+
+    public Member findMember(AuthenticatedMember authenticatedMember) {
+        return memberRepository.findById(authenticatedMember.getId()).orElseThrow(MemberNotFound::new);
     }
 }

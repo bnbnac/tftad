@@ -48,6 +48,9 @@ class PostServiceTest {
     private OAuthService oAuthService;
 
     @MockBean
+    private MemberService memberService;
+
+    @Autowired
     private AuthService authService;
 
     @Autowired
@@ -95,7 +98,7 @@ class PostServiceTest {
     @Test
     @DisplayName("게시글 작성 성공")
     void test1() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
         when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelId");
 
         postCreateDto = PostCreateDto.builder()
@@ -120,7 +123,7 @@ class PostServiceTest {
     @Test
     @DisplayName("작성 실패 - 인증되지 않은 멤버")
     void test2() {
-        when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
         when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelId");
 
         postCreateDto = PostCreateDto.builder()
@@ -138,7 +141,7 @@ class PostServiceTest {
     @Test
     @DisplayName("작성 실패 - 동일 비디오로 작성된 게시물이 존재하는 경우")
     void test3() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
         when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelId");
 
         postCreateDto = PostCreateDto.builder()
@@ -158,7 +161,7 @@ class PostServiceTest {
     @Test
     @DisplayName("작성 실패 - youtubeVideoUrl로 OAuth youtubeChannelId 조회에 실패한 경우")
     void test4() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
         when(oAuthService.getYoutubeChannelId("videoIdNew")).thenThrow(InvalidRequest.class);
 
         postCreateDto = PostCreateDto.builder()
@@ -176,7 +179,7 @@ class PostServiceTest {
     @Test
     @DisplayName("작성 실패 - OAuth로 조회된 채널이 본 서비스에 등록되지 않은 경우")
     void test5() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
         when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelIdOther");
 
         postCreateDto = PostCreateDto.builder()
@@ -197,7 +200,7 @@ class PostServiceTest {
         Member otherMember = testUtility.createMember();
         memberRepository.save(otherMember);
 
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(otherMember);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(otherMember);
         when(oAuthService.getYoutubeChannelId("videoIdNew")).thenReturn("youtubeChannelId");
 
         postCreateDto = PostCreateDto.builder()
@@ -215,7 +218,7 @@ class PostServiceTest {
     @Test
     @DisplayName("게시글 수정 성공")
     void test7() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         QuestionEdit questionEdit = QuestionEdit.builder()
                 .questionId(1L)
@@ -240,7 +243,7 @@ class PostServiceTest {
     @Test
     @DisplayName("수정 실패 - 인증되지 않은 멤버")
     void test8() {
-        when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
 
         QuestionEdit questionEdit = QuestionEdit.builder()
                 .questionId(1L)
@@ -262,7 +265,7 @@ class PostServiceTest {
     @Test
     @DisplayName("수정 실패 - 존재하지 않는 게시물")
     void test9() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         QuestionEdit questionEdit = QuestionEdit.builder()
                 .questionId(1L)
@@ -288,7 +291,7 @@ class PostServiceTest {
         Member otherMember = testUtility.createMember();
         memberRepository.save(otherMember);
 
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(otherMember);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(otherMember);
 
         QuestionEdit questionEdit = QuestionEdit.builder()
                 .questionId(1L)
@@ -310,7 +313,7 @@ class PostServiceTest {
     @Test
     @DisplayName("수정 실패 - question 수정중 exception 발생")
     void test11() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
         doThrow(InvalidRequest.class).when(questionByLifecycleOfPostService)
                 .editQuestionsOfPost(anyLong(), any(PostEdit.class));
 
@@ -334,7 +337,7 @@ class PostServiceTest {
     @Test
     @DisplayName("게시글 삭제 성공")
     void test12() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         // when
         postService.delete(setupPostId, authenticatedMember);
@@ -346,7 +349,7 @@ class PostServiceTest {
     @Test
     @DisplayName("삭제 실패 - 인증되지 않은 멤버")
     void test13() {
-        when(authService.check(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenThrow(MemberNotFound.class);
 
         // when then
         assertThatThrownBy(() -> {
@@ -357,7 +360,7 @@ class PostServiceTest {
     @Test
     @DisplayName("삭제 실패 - 존재하지 않는 게시물")
     void test14() {
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(member);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(member);
 
         // when then
         assertThatThrownBy(() -> {
@@ -371,7 +374,7 @@ class PostServiceTest {
         Member otherMember = testUtility.createMember();
         memberRepository.save(otherMember);
 
-        when(authService.check(any(AuthenticatedMember.class))).thenReturn(otherMember);
+        when(memberService.findMember(any(AuthenticatedMember.class))).thenReturn(otherMember);
 
         // when then
         assertThatThrownBy(() -> {

@@ -19,22 +19,25 @@ public class OAuthService {
     private final GoogleOAuthProperty googleOAuthProperty;
 
     public JsonNode queryChannelResource(String code) {
-        String accessToken = queryAccessToken(code);
+        try {
+            String accessToken = queryAccessToken(code);
 
-        WebClient client = WebClient.create();
+            WebClient client = WebClient.create();
+            String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getYoutubeResourceUrl() + "/channels")
+                    .queryParam("part", "snippet")
+                    .queryParam("mine", true)
+                    .build().toUriString();
 
-        String uri = UriComponentsBuilder.fromUriString(googleOAuthProperty.getYoutubeResourceUrl() + "/channels")
-                .queryParam("part", "snippet")
-                .queryParam("mine", true)
-                .build().toUriString();
-
-        return client.get()
-                .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .retrieve()
-                .toEntity(JsonNode.class)
-                .block()
-                .getBody();
+            return client.get()
+                    .uri(uri)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .retrieve()
+                    .toEntity(JsonNode.class)
+                    .block()
+                    .getBody();
+        } catch (Exception e) {
+            throw new InvalidRequest("code", "failed to query channel resource");
+        }
     }
 
     public String queryAccessToken(String code) {

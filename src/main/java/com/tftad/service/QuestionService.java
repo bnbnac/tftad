@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class QuestionService {
 
     private final AuthService authService;
+    private final MemberService memberService;
     private final QuestionRepository questionRepository;
 
     @Transactional
@@ -47,7 +48,8 @@ public class QuestionService {
 
     @Transactional
     public QuestionDeleteDto delete(Long questionId, AuthenticatedMember authenticatedMember) {
-        Member member = authService.check(authenticatedMember);
+        authService.check(authenticatedMember);
+        Member member = memberService.findMember(authenticatedMember);
         Question question = findQuestion(questionId);
         validatePostOwner(question.getPost(), member.getId());
 

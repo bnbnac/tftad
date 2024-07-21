@@ -36,7 +36,7 @@ class AuthServiceTest {
     private Code code;
 
     @BeforeEach
-    void clean() {
+    void setup() {
         memberRepository.deleteAll();
         codeRepository.deleteAll();
 
@@ -108,7 +108,7 @@ class AuthServiceTest {
     @DisplayName("가입 실패 - 만료된 코드")
     void test4() {
         code = Code.builder()
-                .email("email@email")
+                .email("email@emailOther")
                 .durationMinutes(0L) // expired
                 .code("code")
                 .build();
@@ -116,7 +116,7 @@ class AuthServiceTest {
         codeRepository.save(code);
 
         Signup signup = Signup.builder()
-                .email("email@email")
+                .email("email@emailOther")
                 .name("name")
                 .password("password")
                 .code("code")
@@ -132,7 +132,7 @@ class AuthServiceTest {
     @DisplayName("가입 실패 - unAuthed 코드 - 코드 요청 후 인증여부를 가입폼 최종제출시 재확인")
     void test5() {
         code = Code.builder()
-                .email("email@email")
+                .email("email@emailOther")
                 .durationMinutes(20L)
                 .code("code")
                 .build();
@@ -140,7 +140,7 @@ class AuthServiceTest {
         codeRepository.save(code);
 
         Signup signup = Signup.builder()
-                .email("email@email")
+                .email("email@emailOther")
                 .name("name")
                 .password("password")
                 .code("code")

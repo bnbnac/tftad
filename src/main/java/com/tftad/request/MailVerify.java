@@ -11,5 +11,5 @@ public class MailVerify {
     private String email;
 
     @NotBlank(message = "코드를 입력해주세요")
-    private String authCode;
+    private String code;
 }
