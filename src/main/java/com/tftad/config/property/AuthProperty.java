@@ -19,6 +19,7 @@ public class AuthProperty {
     private String tftadCookieName;
     private int tftadCookieMaxAgeInDays;
     private String tftadDomain;
+    private String allowedOrigins;
     private Long authCodeDurationMinutes;
     private Long emailAuthCodeDurationMinutes;
     private int limitEmailAuthCodeRequest;
