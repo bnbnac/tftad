@@ -1,9 +1,8 @@
 package com.tftad.config;
 
 import com.tftad.config.property.AuthProperty;
-import com.tftad.config.property.JwtProperty;
 import com.tftad.config.resolver.AuthResolver;
-import com.tftad.utility.Utility;
+import com.tftad.utility.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -16,13 +15,12 @@ import java.util.List;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    private final JwtProperty jwtProperty;
+    private final JwtUtils jwtUtils;
     private final AuthProperty authProperty;
-    private final Utility utility;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(new AuthResolver(jwtProperty, authProperty, utility));
+        resolvers.add(new AuthResolver(jwtUtils, authProperty));
     }
 
     @Override

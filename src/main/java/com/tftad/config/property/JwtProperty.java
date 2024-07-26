@@ -10,15 +10,15 @@ import java.util.Base64;
 public class JwtProperty {
 
     private byte[] key;
-    private int maxAgeInDays;
+    private Long maxAgeInMinutes;
     private boolean cookieSecure;
 
     public void setKey(String key) {
         this.key = Base64.getDecoder().decode(key);
     }
 
-    public void setMaxAgeInDays(int maxAgeInDays) {
-        this.maxAgeInDays = maxAgeInDays;
+    public void setMaxAgeInMinutes(Long maxAgeInMinutes) {
+        this.maxAgeInMinutes = maxAgeInMinutes;
     }
 
     public void setCookieSecure(boolean cookieSecure) {
