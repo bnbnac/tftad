@@ -15,13 +15,15 @@ public class AuthProperty {
     public static final String MAIL_SENDER = "tftad.com@gmail.com";
 
     private String googleCookieName;
-    private int googleCookieMaxAgeInDays;
-    private String tftadCookieName;
-    private int tftadCookieMaxAgeInDays;
+    private Long googleCookieMaxAgeInDays;
+    private String accessTokenCookieName;
+    private Long accessTokenCookieMaxAgeInDays;
+    private String refreshTokenCookieName;
+    private Long refreshTokenCookieMaxAgeInDays;
     private String tftadDomain;
     private String allowedOrigins;
     private Long authCodeDurationMinutes;
     private Long emailAuthCodeDurationMinutes;
-    private int limitEmailAuthCodeRequest;
+    private Long limitEmailAuthCodeRequest;
 
 }
