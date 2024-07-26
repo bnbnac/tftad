@@ -10,4 +10,6 @@ public interface AuthService {
     Long login(Login login);
 
     Long signup(Signup signup);
+
+    void logout(AuthenticatedMember authenticatedMember);
 }

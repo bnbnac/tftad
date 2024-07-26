@@ -5,6 +5,7 @@ import com.tftad.domain.Code;
 import com.tftad.domain.Member;
 import com.tftad.exception.InvalidLoginInformation;
 import com.tftad.exception.InvalidRequest;
+import com.tftad.exception.MemberNotFound;
 import com.tftad.exception.Unauthorized;
 import com.tftad.repository.MemberRepository;
 import com.tftad.request.Login;
@@ -12,6 +13,7 @@ import com.tftad.request.Signup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -19,6 +21,7 @@ public class MemberAuthService implements AuthService {
 
     private final MemberRepository memberRepository;
     private final CodeService codeService;
+    private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -54,7 +57,7 @@ public class MemberAuthService implements AuthService {
         return memberRepository.save(member).getId();
     }
 
-    public void validateSignedUpMail(String email) {
+    private void validateSignedUpMail(String email) {
         memberRepository.findByEmail(email)
                 .ifPresent(m -> {
                     throw new InvalidRequest("email", "이미 가입된 이메일입니다");
@@ -77,5 +80,13 @@ public class MemberAuthService implements AuthService {
         if (!foundCode.isAuthed()) {
             throw new InvalidRequest("email", "인증코드를 생성후 인증해주세요.");
         }
+    }
+
+    @Transactional
+    @Override
+    public void logout(AuthenticatedMember authenticatedMember) {
+        check(authenticatedMember);
+        memberRepository.findById(authenticatedMember.getId()).orElseThrow(MemberNotFound::new);
+        refreshTokenService.delete(authenticatedMember.getId());
     }
 }

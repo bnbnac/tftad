@@ -1,11 +1,9 @@
 package com.tftad.config.resolver;
 
 import com.tftad.config.data.AuthenticatedMember;
-import com.tftad.config.data.OAuthedMember;
+import com.tftad.config.data.RefreshRequest;
 import com.tftad.config.property.AuthProperty;
-import com.tftad.config.property.JwtProperty;
-import com.tftad.exception.Unauthorized;
-import com.tftad.utility.Utility;
+import com.tftad.utility.JwtUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,59 +20,52 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @RequiredArgsConstructor
 public class AuthResolver implements HandlerMethodArgumentResolver {
 
-    private final JwtProperty jwtProperty;
+    private final JwtUtils jwtUtils;
     private final AuthProperty authProperty;
-    private final Utility utility;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.getParameterType().equals(AuthenticatedMember.class)
-                || parameter.getParameterType().equals(OAuthedMember.class);
+                || parameter.getParameterType().equals(RefreshRequest.class);
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-        Cookie[] cookies = utility.extractCookiesFromRequest(webRequest.getNativeRequest(HttpServletRequest.class));
+
+        Cookie[] cookies = jwtUtils.extractCookiesFromRequest(webRequest.getNativeRequest(HttpServletRequest.class));
+        Claims payload = getAccessTokenPayload(cookies);
+        Long memberId = extractMemberId(payload);
 
         if (parameter.getParameterType().equals(AuthenticatedMember.class)) {
-            return generateAuthenticatedMember(cookies);
+            jwtUtils.validateExpiration(payload);
+            return createAuthenticatedMember(memberId);
+        } else {
+            return createRefreshRequest(cookies, memberId);
         }
-
-        return generateOAuthedMember(cookies);
     }
 
-    private OAuthedMember generateOAuthedMember(Cookie[] cookies) {
-        AuthenticatedMember authenticatedMember = generateAuthenticatedMember(cookies);
-        String memberId = String.valueOf(authenticatedMember.getId());
+    private Claims getAccessTokenPayload(Cookie[] cookies) {
+        String jws = jwtUtils.extractValueByCookieName(cookies, authProperty.getAccessTokenCookieName());
+        return jwtUtils.parseJws(jws).getPayload();
+    }
 
-        String jws = utility.extractValueByCookieName(cookies, authProperty.getGoogleCookieName());
-        if (jws.isBlank()) {
-            throw new Unauthorized();
-        }
-        Claims payload = utility.parseJws(jws, jwtProperty.getKey()).getPayload();
+    private Long extractMemberId(Claims payload) {
+        String memberId = payload.get(AuthProperty.MEMBER_ID, String.class);
+        return Long.parseLong(memberId);
+    }
 
-        utility.verifyExpiration(payload);
-
-        String code = payload.get(AuthProperty.AUTHORIZATION_CODE, String.class);
-        return OAuthedMember.builder()
-                .id(Long.parseLong(memberId))
-                .authorizationCode(code)
+    private AuthenticatedMember createAuthenticatedMember(Long memberId) {
+        return AuthenticatedMember.builder()
+                .id(memberId)
                 .build();
     }
 
-    private AuthenticatedMember generateAuthenticatedMember(Cookie[] cookies) {
-        String jws = utility.extractValueByCookieName(cookies, authProperty.getTftadCookieName());
-        if (jws.isBlank()) {
-            throw new Unauthorized();
-        }
-        Claims payload = utility.parseJws(jws, jwtProperty.getKey()).getPayload();
-
-        utility.verifyExpiration(payload);
-
-        String memberId = payload.get(AuthProperty.MEMBER_ID, String.class);
-        return AuthenticatedMember.builder()
-                .id(Long.parseLong(memberId))
+    private RefreshRequest createRefreshRequest(Cookie[] cookies, Long memberId) {
+        String refreshToken = jwtUtils.extractValueByCookieName(cookies, authProperty.getRefreshTokenCookieName());
+        return RefreshRequest.builder()
+                .token(refreshToken)
+                .memberId(memberId)
                 .build();
     }
 }
