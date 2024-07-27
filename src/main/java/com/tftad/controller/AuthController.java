@@ -69,7 +69,7 @@ public class AuthController {
 
     @GetMapping("/auth/refresh")
     public ResponseEntity<Void> refresh(RefreshRequest refreshRequest) {
-        refreshTokenService.verify(refreshRequest.getToken(), refreshRequest.getMemberId());
+        refreshTokenService.verify(refreshRequest);
 
         JwtBuilder accessTokenBuilder = Jwts.builder()
                 .claim(AuthProperty.MEMBER_ID, String.valueOf(refreshRequest.getMemberId()));

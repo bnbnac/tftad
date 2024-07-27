@@ -3,7 +3,9 @@ package com.tftad.service;
 import com.tftad.config.data.RefreshRequest;
 import com.tftad.config.property.AuthProperty;
 import com.tftad.domain.RefreshToken;
-import com.tftad.exception.Unauthorized;
+import com.tftad.exception.ExpiredToken;
+import com.tftad.exception.TokenNotFound;
+import com.tftad.exception.UnmatchedToken;
 import com.tftad.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,17 +34,26 @@ public class RefreshTokenService {
                 .build();
     }
 
-    public void verify(String refreshToken, Long memberId) {
-        RefreshToken foundToken = findRefreshToken(memberId);
+    public void verify(RefreshRequest refreshRequest) {
+        RefreshToken foundToken = findRefreshToken(refreshRequest.getMemberId());
 
-        if (foundToken.isExpired() || !foundToken.matches(refreshToken)) {
-            throw new Unauthorized();
+        if (foundToken.isExpired()) {
+            throw new ExpiredToken();
+        }
+
+        if (!foundToken.matches(refreshRequest.getToken())) {
+            throw new UnmatchedToken();
         }
     }
 
     private RefreshToken findRefreshToken(Long memberId) {
         // 개선 필요. 어차피 메타데이터 테이블 만들거라 일단 get(0)로 처리
-        return refreshTokenRepository.findByMemberId(memberId).get(0);
+        RefreshToken foundToken = refreshTokenRepository.findByMemberId(memberId).get(0);
+
+        if (foundToken == null) {
+            throw new TokenNotFound();
+        }
+        return foundToken;
     }
 
     public void delete(RefreshRequest refreshRequest) {
