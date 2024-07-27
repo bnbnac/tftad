@@ -1,6 +1,7 @@
 package com.tftad.service;
 
 import com.tftad.config.data.AuthenticatedMember;
+import com.tftad.config.data.RefreshRequest;
 import com.tftad.domain.Code;
 import com.tftad.domain.Member;
 import com.tftad.exception.InvalidLoginInformation;
@@ -84,9 +85,8 @@ public class MemberAuthService implements AuthService {
 
     @Transactional
     @Override
-    public void logout(AuthenticatedMember authenticatedMember) {
-        check(authenticatedMember);
-        memberRepository.findById(authenticatedMember.getId()).orElseThrow(MemberNotFound::new);
-        refreshTokenService.delete(authenticatedMember.getId());
+    public void logout(RefreshRequest refreshRequest) {
+        memberRepository.findById(refreshRequest.getMemberId()).orElseThrow(MemberNotFound::new);
+        refreshTokenService.delete(refreshRequest);
     }
 }

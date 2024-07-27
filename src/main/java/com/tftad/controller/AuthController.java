@@ -1,6 +1,5 @@
 package com.tftad.controller;
 
-import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.data.RefreshRequest;
 import com.tftad.config.property.AuthProperty;
 import com.tftad.config.property.JwtProperty;
@@ -38,7 +37,7 @@ public class AuthController {
     @PostMapping("/auth/login")
     public ResponseEntity<Void> login(@RequestBody @Valid Login login) {
         Long memberId = authService.login(login);
-        String refreshToken = refreshTokenService.save(memberId);
+        String refreshToken = refreshTokenService.save(memberId); // 메타데이터?
 
         JwtBuilder accessTokenBuilder = Jwts.builder().claim(AuthProperty.MEMBER_ID, String.valueOf(memberId));
         String accessTokenJws = jwtUtils.generateJws(accessTokenBuilder, jwtProperty.getMaxAgeInMinutes());
@@ -68,7 +67,7 @@ public class AuthController {
         );
     }
 
-    @GetMapping("/refresh")
+    @GetMapping("/auth/refresh")
     public ResponseEntity<Void> refresh(RefreshRequest refreshRequest) {
         refreshTokenService.verify(refreshRequest.getToken(), refreshRequest.getMemberId());
 
@@ -83,9 +82,9 @@ public class AuthController {
                 .build();
     }
 
-    @DeleteMapping("/logout")
-    public ResponseEntity<Void> logout(AuthenticatedMember authenticatedMember) {
-        authService.logout(authenticatedMember);
+    @DeleteMapping("/auth/logout")
+    public ResponseEntity<Void> logout(RefreshRequest refreshRequest) {
+        authService.logout(refreshRequest);
 
         ResponseCookie accessTokenCookie = createExpiredCookie(authProperty.getAccessTokenCookieName());
         ResponseCookie refreshTokenCookie = createExpiredCookie(authProperty.getRefreshTokenCookieName());

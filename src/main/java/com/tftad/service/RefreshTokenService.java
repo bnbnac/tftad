@@ -1,5 +1,6 @@
 package com.tftad.service;
 
+import com.tftad.config.data.RefreshRequest;
 import com.tftad.config.property.AuthProperty;
 import com.tftad.domain.RefreshToken;
 import com.tftad.exception.Unauthorized;
@@ -40,11 +41,12 @@ public class RefreshTokenService {
     }
 
     private RefreshToken findRefreshToken(Long memberId) {
-        return refreshTokenRepository.findByMemberId(memberId).orElseThrow(Unauthorized::new);
+        // 개선 필요. 어차피 메타데이터 테이블 만들거라 일단 get(0)로 처리
+        return refreshTokenRepository.findByMemberId(memberId).get(0);
     }
 
-    public void delete(Long memberId) {
-        RefreshToken foundToken = findRefreshToken(memberId);
+    public void delete(RefreshRequest refreshRequest) {
+        RefreshToken foundToken = findRefreshToken(refreshRequest.getMemberId());
         refreshTokenRepository.delete(foundToken);
     }
 }
