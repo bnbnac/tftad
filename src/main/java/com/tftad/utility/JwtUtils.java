@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -78,16 +79,26 @@ public class JwtUtils {
         }
     }
 
-    public void validateExpiration(Claims payload) {
-        Long expiration = payload.get(AuthProperty.EXPIRATION, Long.class);
-        if (expiration == null) {
-            throw new Unauthorized();
+    public Optional<Jws<Claims>> validateAndParseToken(String token) {
+        try {
+            return Optional.of(Jwts.parser()
+                    .verifyWith(Keys.hmacShaKeyFor(jwtProperty.getKey()))
+                    .build()
+                    .parseSignedClaims(token));
+        } catch (SecurityException | MalformedJwtException e) {
+            log.info("Invalid JWT Token: " + e.getMessage());
+        } catch (ExpiredJwtException e) {
+            log.info("Expired JWT Token: " + e.getMessage());
+            throw e;
+        } catch (UnsupportedJwtException e) {
+            log.info("Unsupported JWT Token: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.info("JWT claims string is empty: " + e.getMessage());
         }
+        return Optional.empty();
+    }
 
-        Instant expirationDate = Instant.ofEpochSecond(expiration);
-
-        if (expirationDate.isBefore(Instant.now())) {
-            throw new Unauthorized();
-        }
+    public Optional<Claims> getClaims(String jwtToken) {
+        return validateAndParseToken(jwtToken).map(Jws::getPayload);
     }
 }

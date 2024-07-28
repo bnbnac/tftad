@@ -22,7 +22,8 @@ public class RefreshTokenService {
     public String save(Long memberId) {
         String token = UUID.randomUUID().toString();
         refreshTokenRepository.save(createRefreshToken(memberId, token));
-
+        // 로그인 기기 대수 제한을 둬야함
+        // uuid 유니크?
         return token;
     }
 

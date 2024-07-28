@@ -3,8 +3,10 @@ package com.tftad.config.resolver;
 import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.data.RefreshRequest;
 import com.tftad.config.property.AuthProperty;
+import com.tftad.exception.Unauthorized;
 import com.tftad.utility.JwtUtils;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -34,20 +36,22 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
 
         Cookie[] cookies = jwtUtils.extractCookiesFromRequest(webRequest.getNativeRequest(HttpServletRequest.class));
-        Claims payload = getAccessTokenPayload(cookies);
-        Long memberId = extractMemberId(payload);
+        String accessToken = jwtUtils.extractValueByCookieName(cookies, authProperty.getAccessTokenCookieName());
 
         if (parameter.getParameterType().equals(AuthenticatedMember.class)) {
-            jwtUtils.validateExpiration(payload);
-            return createAuthenticatedMember(memberId);
+            return getAuthenticatedMember(accessToken);
         } else {
-            return createRefreshRequest(cookies, memberId);
+            String refreshToken = jwtUtils.extractValueByCookieName(cookies, authProperty.getRefreshTokenCookieName());
+            return getRefreshRequest(accessToken, refreshToken);
         }
     }
 
-    private Claims getAccessTokenPayload(Cookie[] cookies) {
-        String jws = jwtUtils.extractValueByCookieName(cookies, authProperty.getAccessTokenCookieName());
-        return jwtUtils.parseJws(jws).getPayload();
+    private AuthenticatedMember getAuthenticatedMember(String accessToken) {
+        Claims payload = jwtUtils.validateAndParseToken(accessToken)
+                .orElseThrow(Unauthorized::new)
+                .getPayload();
+        Long memberId = extractMemberId(payload);
+        return createAuthenticatedMember(memberId);
     }
 
     private Long extractMemberId(Claims payload) {
@@ -61,8 +65,23 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
                 .build();
     }
 
-    private RefreshRequest createRefreshRequest(Cookie[] cookies, Long memberId) {
-        String refreshToken = jwtUtils.extractValueByCookieName(cookies, authProperty.getRefreshTokenCookieName());
+    private RefreshRequest getRefreshRequest(String accessToken, String refreshToken) {
+        Claims payload = getClaimsEvenIfExpired(accessToken);
+        Long memberId = extractMemberId(payload);
+        return createRefreshRequest(refreshToken, memberId);
+    }
+
+    private Claims getClaimsEvenIfExpired(String accessToken) {
+        try {
+            return jwtUtils.validateAndParseToken(accessToken)
+                    .orElseThrow(Unauthorized::new)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        }
+    }
+
+    private RefreshRequest createRefreshRequest(String refreshToken, Long memberId) {
         return RefreshRequest.builder()
                 .token(refreshToken)
                 .memberId(memberId)
