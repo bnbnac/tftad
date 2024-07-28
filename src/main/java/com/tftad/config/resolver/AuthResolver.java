@@ -46,12 +46,14 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
         }
     }
 
-    private AuthenticatedMember getAuthenticatedMember(String accessToken) {
-        Claims payload = jwtUtils.validateAndParseToken(accessToken)
-                .orElseThrow(Unauthorized::new)
-                .getPayload();
-        Long memberId = extractMemberId(payload);
-        return createAuthenticatedMember(memberId);
+    public AuthenticatedMember getAuthenticatedMember(String accessToken) {
+        try {
+            Claims payload = jwtUtils.validateAndParseToken(accessToken).getPayload();
+            Long memberId = extractMemberId(payload);
+            return createAuthenticatedMember(memberId);
+        } catch (ExpiredJwtException e) {
+            throw new Unauthorized("Expired JWT token");
+        }
     }
 
     private Long extractMemberId(Claims payload) {
@@ -71,11 +73,9 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
         return createRefreshRequest(refreshToken, memberId);
     }
 
-    private Claims getClaimsEvenIfExpired(String accessToken) {
+    public Claims getClaimsEvenIfExpired(String accessToken) {
         try {
-            return jwtUtils.validateAndParseToken(accessToken)
-                    .orElseThrow(Unauthorized::new)
-                    .getPayload();
+            return jwtUtils.validateAndParseToken(accessToken).getPayload();
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }

@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -68,37 +67,24 @@ public class JwtUtils {
         throw new Unauthorized();
     }
 
-    public Jws<Claims> parseJws(String jws) {
+    public Jws<Claims> validateAndParseToken(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(Keys.hmacShaKeyFor(jwtProperty.getKey()))
                     .build()
-                    .parseSignedClaims(jws);
-        } catch (JwtException e) {
-            throw new Unauthorized();
-        }
-    }
-
-    public Optional<Jws<Claims>> validateAndParseToken(String token) {
-        try {
-            return Optional.of(Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(jwtProperty.getKey()))
-                    .build()
-                    .parseSignedClaims(token));
+                    .parseSignedClaims(token);
         } catch (SecurityException | MalformedJwtException e) {
-            log.info("Invalid JWT Token: " + e.getMessage());
+            log.info("Invalid JWT Token: {}", e.getMessage());
+            throw new Unauthorized("Invalid JWT token");
         } catch (ExpiredJwtException e) {
-            log.info("Expired JWT Token: " + e.getMessage());
+            log.info("Expired JWT Token: {}", e.getMessage());
             throw e;
         } catch (UnsupportedJwtException e) {
-            log.info("Unsupported JWT Token: " + e.getMessage());
+            log.info("Unsupported JWT Token: {}", e.getMessage());
+            throw new Unauthorized("Unsupported JWT token");
         } catch (IllegalArgumentException e) {
-            log.info("JWT claims string is empty: " + e.getMessage());
+            log.info("JWT claims string is empty: {}", e.getMessage());
+            throw new Unauthorized("Empty JWT claims");
         }
-        return Optional.empty();
-    }
-
-    public Optional<Claims> getClaims(String jwtToken) {
-        return validateAndParseToken(jwtToken).map(Jws::getPayload);
     }
 }

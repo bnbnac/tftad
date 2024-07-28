@@ -8,6 +8,9 @@ public class Unauthorized extends TftadException {
         super(MESSAGE);
     }
 
+    public Unauthorized(String msg) {
+        super(msg);
+    }
 
     @Override
     public int getStatusCode() {
