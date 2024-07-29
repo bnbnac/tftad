@@ -67,7 +67,7 @@ public class AuthController {
         );
     }
 
-    @GetMapping("/auth/refresh")
+    @PostMapping("/auth/refresh")
     public ResponseEntity<Void> refresh(RefreshRequest refreshRequest) {
         refreshTokenService.verify(refreshRequest);
 
