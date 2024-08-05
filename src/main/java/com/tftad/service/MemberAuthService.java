@@ -4,17 +4,16 @@ import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.data.RefreshRequest;
 import com.tftad.domain.Code;
 import com.tftad.domain.Member;
+import com.tftad.domain.RefreshToken;
 import com.tftad.exception.InvalidLoginInformation;
 import com.tftad.exception.InvalidRequest;
 import com.tftad.exception.MemberNotFound;
-import com.tftad.exception.Unauthorized;
 import com.tftad.repository.MemberRepository;
 import com.tftad.request.Login;
 import com.tftad.request.Signup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -77,10 +76,25 @@ public class MemberAuthService implements AuthService {
         }
     }
 
-    @Transactional
     @Override
     public void logout(RefreshRequest refreshRequest) {
-        memberRepository.findById(refreshRequest.getMemberId()).orElseThrow(MemberNotFound::new);
-        refreshTokenService.delete(refreshRequest);
+        Member member = memberRepository.findById(refreshRequest.getMemberId()).orElseThrow(MemberNotFound::new);
+        RefreshToken refreshToken = refreshTokenService.findRefreshToken(refreshRequest.getToken());
+        validateOwner(member.getId(), refreshToken.getMemberId());
+        refreshTokenService.delete(refreshToken);
+    }
+
+    @Override
+    public void logout(Long tokenId, AuthenticatedMember authenticatedMember) {
+        Member member = memberService.findMember(authenticatedMember);
+        RefreshToken refreshToken = refreshTokenService.findRefreshToken(tokenId);
+        validateOwner(member.getId(), refreshToken.getMemberId());
+        refreshTokenService.delete(refreshToken);
+    }
+
+    private void validateOwner(Long memberId, Long refreshTokenMemberId) {
+        if (!memberId.equals(refreshTokenMemberId)) {
+            throw new InvalidRequest("memberId", "소유자가 아닙니다");
+        }
     }
 }

@@ -16,7 +16,8 @@ public class TokenResponse {
     public TokenResponse(RefreshToken token) {
         this.id = token.getId();
         this.createdAt = token.getCreatedAt();
-        this.clientIp = token.getClientIp().substring(0, 4); // 이걸 region같은걸로
+        // 국내(높은정밀도): KT GEOIP, WHOIS API from KISA, 국외(도시정도까지): MaxMind GeoIP2
+        this.clientIp = token.getClientIp().substring(0, 4);
         this.userAgent = token.getUserAgent();
     }
 }
