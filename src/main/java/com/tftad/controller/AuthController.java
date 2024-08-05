@@ -67,6 +67,7 @@ public class AuthController {
         String userAgent = request.getHeader("User-Agent");
 
         return RefreshTokenCreateDto.builder()
+                .memberId(memberId)
                 .clientIp(clientIp)
                 .userAgent(userAgent)
                 .build();
