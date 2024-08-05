@@ -1,15 +1,20 @@
 package com.tftad.controller;
 
+import com.tftad.config.data.AuthenticatedMember;
 import com.tftad.config.data.RefreshRequest;
 import com.tftad.config.property.AuthProperty;
 import com.tftad.config.property.JwtProperty;
+import com.tftad.domain.RefreshTokenCreateDto;
+import com.tftad.exception.TokenNotFound;
 import com.tftad.request.Login;
 import com.tftad.request.Signup;
+import com.tftad.response.TokenResponse;
 import com.tftad.service.AuthService;
 import com.tftad.service.RefreshTokenService;
 import com.tftad.utility.JwtUtils;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +22,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -96,9 +103,13 @@ public class AuthController {
                 .build();
     }
 
-    @DeleteMapping("/auth/logout")
-    public ResponseEntity<Void> logout(RefreshRequest refreshRequest) {
-        authService.logout(refreshRequest);
+    @DeleteMapping("/auth/logout/me")
+    public ResponseEntity<Void> logMeOut(RefreshRequest refreshRequest) {
+        try {
+            authService.logout(refreshRequest);
+        } catch (TokenNotFound e) {
+            log.info("이미 만료된 토큰입니다. 쿠키를 삭제합니다. token: {}", refreshRequest.getToken());
+        }
 
         ResponseCookie accessTokenCookie = createExpiredCookie(authProperty.getAccessTokenCookieName());
         ResponseCookie refreshTokenCookie = createExpiredCookie(authProperty.getRefreshTokenCookieName());
@@ -117,6 +128,24 @@ public class AuthController {
                 .secure(jwtProperty.isCookieSecure())
                 .maxAge(0)
                 .sameSite("strict")
+                .build();
+    }
+
+    @GetMapping("/auth/tokens")
+    public void getCurrentTokens(AuthenticatedMember authenticatedMember) {
+        List<TokenResponse> tokens = refreshTokenService.getListOf(authenticatedMember.getId());
+    }
+
+    @DeleteMapping("/auth/logout/{tokenId}")
+    public ResponseEntity<Void> logout(@PathVariable Long tokenId, AuthenticatedMember authenticatedMember) {
+        authService.logout(tokenId, authenticatedMember);
+
+        ResponseCookie accessTokenCookie = createExpiredCookie(authProperty.getAccessTokenCookieName());
+        ResponseCookie refreshTokenCookie = createExpiredCookie(authProperty.getRefreshTokenCookieName());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                 .build();
     }
 }

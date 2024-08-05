@@ -11,4 +11,6 @@ public interface AuthService {
     Long signup(Signup signup);
 
     void logout(RefreshRequest refreshRequest);
+
+    void logout(Long tokenId, AuthenticatedMember authenticatedMember);
 }
