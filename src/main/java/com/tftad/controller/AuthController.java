@@ -104,7 +104,7 @@ public class AuthController {
                 .build();
     }
 
-    @DeleteMapping("/auth/logout/me")
+    @DeleteMapping("/auth/logout")
     public ResponseEntity<Void> logMeOut(RefreshRequest refreshRequest) {
         try {
             authService.logout(refreshRequest);
@@ -133,8 +133,8 @@ public class AuthController {
     }
 
     @GetMapping("/auth/tokens")
-    public void getCurrentTokens(AuthenticatedMember authenticatedMember) {
-        List<TokenResponse> tokens = refreshTokenService.getListOf(authenticatedMember.getId());
+    public List<TokenResponse> getCurrentTokens(AuthenticatedMember authenticatedMember) {
+        return refreshTokenService.getListOf(authenticatedMember.getId());
     }
 
     @DeleteMapping("/auth/logout/{tokenId}")
