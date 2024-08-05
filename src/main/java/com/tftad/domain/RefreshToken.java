@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 @Entity
 @Getter
@@ -20,28 +19,42 @@ public class RefreshToken {
     @Column(name = "REFRESH_TOKEN_ID")
     private Long id;
 
+    @Column(unique = true)
+    private String token;
+
     private Long memberId;
 
-    private String refreshToken;
+    private LocalDateTime createdAt;
 
     private LocalDateTime expiryDate;
 
+    private String clientIp;
+
+    private String userAgent;
+
     @Builder
-    public RefreshToken(Long memberId, String refreshToken, Long durationDays) {
+    public RefreshToken(Long memberId, String token, Long durationDays, String clientIp, String userAgent) {
         Assert.notNull(memberId, "memberId must not be null");
-        Assert.hasText(refreshToken, "refreshToken must not be null");
+        Assert.hasText(token, "token must not be null");
         Assert.notNull(durationDays, "durationDays must not be null");
 
         this.memberId = memberId;
-        this.refreshToken = refreshToken;
-        this.expiryDate = LocalDateTime.now().plus(durationDays, ChronoUnit.DAYS);
+        this.token = token;
+        this.createdAt = LocalDateTime.now();
+        this.expiryDate = LocalDateTime.now().plusDays(durationDays);
+        this.clientIp = clientIp;
+        this.userAgent = userAgent;
     }
 
     public boolean matches(String receivedToken) {
-        return refreshToken.equals(receivedToken);
+        return token.equals(receivedToken);
     }
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiryDate);
+    }
+
+    public boolean isOwnedBy(Long memberId) {
+        return this.memberId.equals(memberId);
     }
 }

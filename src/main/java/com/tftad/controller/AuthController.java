@@ -35,9 +35,10 @@ public class AuthController {
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<Void> login(@RequestBody @Valid Login login) {
+    public ResponseEntity<Void> login(@RequestBody @Valid Login login, HttpServletRequest request) {
         Long memberId = authService.login(login);
-        String refreshToken = refreshTokenService.save(memberId); // 메타데이터?
+        RefreshTokenCreateDto refreshTokenCreateDto = createRefreshTokenCreateDto(request, memberId);
+        String refreshToken = refreshTokenService.save(refreshTokenCreateDto);
 
         JwtBuilder accessTokenBuilder = Jwts.builder().claim(AuthProperty.MEMBER_ID, String.valueOf(memberId));
         String accessTokenJws = jwtUtils.generateJws(accessTokenBuilder, jwtProperty.getMaxAgeInMinutes());
@@ -48,6 +49,19 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .build();
+    }
+
+    private RefreshTokenCreateDto createRefreshTokenCreateDto(HttpServletRequest request, Long memberId) {
+        String clientIp = request.getHeader("X-Forwarded-For");
+        if (clientIp == null) {
+            clientIp = request.getRemoteAddr();
+        }
+        String userAgent = request.getHeader("User-Agent");
+
+        return RefreshTokenCreateDto.builder()
+                .clientIp(clientIp)
+                .userAgent(userAgent)
                 .build();
     }
 

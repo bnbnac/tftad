@@ -8,7 +8,6 @@ public class TokenNotFound extends TftadException {
         super(MESSAGE);
     }
 
-
     @Override
     public int getStatusCode() {
         return 401;

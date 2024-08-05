@@ -19,19 +19,21 @@ public class RefreshTokenService {
     private final AuthProperty authProperty;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public String save(Long memberId) {
+    public String save(RefreshTokenCreateDto refreshTokenCreateDto) {
         String token = UUID.randomUUID().toString();
-        refreshTokenRepository.save(createRefreshToken(memberId, token));
-        // 로그인 기기 대수 제한을 둬야함
-        // uuid 유니크?
+        RefreshToken refreshToken = createRefreshToken(refreshTokenCreateDto, token);
+        refreshTokenRepository.save(refreshToken);
+
         return token;
     }
 
-    private RefreshToken createRefreshToken(Long memberId, String token) {
+    private RefreshToken createRefreshToken(RefreshTokenCreateDto refreshTokenCreateDto, String token) {
         return RefreshToken.builder()
-                .memberId(memberId)
-                .refreshToken(token)
+                .memberId(refreshTokenCreateDto.getMemberId())
+                .token(token)
                 .durationDays(authProperty.getRefreshTokenCookieMaxAgeInDays())
+                .clientIp(refreshTokenCreateDto.getClientIp())
+                .userAgent(refreshTokenCreateDto.getUserAgent())
                 .build();
     }
 
