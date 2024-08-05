@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MemberService {
 
-    private final AuthService authService;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -30,14 +29,12 @@ public class MemberService {
 
     @Transactional
     public MemberResponseDetail getMemberDetails(AuthenticatedMember authenticatedMember) {
-        authService.check(authenticatedMember);
         Member member = findMember(authenticatedMember);
         return memberRepository.getMemberWithDetails(member.getId());
     }
 
     @Transactional
     public void edit(Long memberId, MemberEdit memberEdit, AuthenticatedMember authenticatedMember) {
-        authService.check(authenticatedMember);
         Member member = findMember(authenticatedMember);
         validateMemberOwner(memberId, authenticatedMember);
 

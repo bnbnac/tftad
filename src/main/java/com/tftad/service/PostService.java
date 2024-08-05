@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostService {
 
-    private final AuthService authService;
     private final PostRepository postRepository;
     private final ChannelRepository channelRepository;
     private final MemberService memberService;
@@ -34,7 +33,6 @@ public class PostService {
     private final QuestionByLifecycleOfPostService questionByLifecycleOfPostService;
 
     public Long write(PostCreateDto postCreateDto, AuthenticatedMember authenticatedMember) {
-        authService.check(authenticatedMember);
         Member member = memberService.findMember(authenticatedMember);
 
         validatePostedVideo(postCreateDto.getVideoId());
@@ -101,7 +99,6 @@ public class PostService {
 
     @Transactional
     public void edit(Long postId, PostEdit postEdit, AuthenticatedMember authenticatedMember) {
-        authService.check(authenticatedMember);
         Member member = memberService.findMember(authenticatedMember);
         editPost(postId, postEdit, member.getId());
 
@@ -130,7 +127,6 @@ public class PostService {
 
     @Transactional
     public void delete(Long postId, AuthenticatedMember authenticatedMember) {
-        authService.check(authenticatedMember);
         Member member = memberService.findMember(authenticatedMember);
         Post post = findPost(postId);
         validatePostOwner(member.getId(), post);
@@ -164,7 +160,6 @@ public class PostService {
 
     @Transactional
     public boolean isPublishedPostOwner(Long postId, AuthenticatedMember authenticatedMember) {
-        authService.check(authenticatedMember);
         Member member = memberService.findMember(authenticatedMember);
         Post post = postRepository.findById(postId).orElseThrow(PostNotFound::new);
 

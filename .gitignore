@@ -35,10 +35,12 @@ out/
 
 ### VS Code ###
 .vscode/
-
-src/main/resources/**
-src/test/resources/**
+src/main/resources/data.sql
+src/main/resources/*.properties
+src/test/resources/*.properties
 
 todo.md
 
 nohup.out
+
+qodana.yaml

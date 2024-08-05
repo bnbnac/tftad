@@ -16,14 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ChannelService {
 
-    private final AuthService authService;
     private final ChannelRepository channelRepository;
     private final MemberService memberService;
     private final ChannelInheritService channelInheritService;
 
     @Transactional
     public void addChannel(ChannelCreateDto channelCreateDto, AuthenticatedMember authenticatedMember) {
-        authService.check(authenticatedMember);
         Member member = memberService.findMember(authenticatedMember);
 
         if (isNewChannel(channelCreateDto)) {
@@ -73,7 +71,6 @@ public class ChannelService {
 
     @Transactional
     public void delete(Long channelId, AuthenticatedMember authenticatedMember) {
-        authService.check(authenticatedMember);
         Member member = memberService.findMember(authenticatedMember);
         Channel channel = findChannel(channelId);
         validateChannelOwner(member.getId(), channel);

@@ -8,7 +8,6 @@ public class ExpiredToken extends TftadException {
         super(MESSAGE);
     }
 
-
     @Override
     public int getStatusCode() {
         return 401;

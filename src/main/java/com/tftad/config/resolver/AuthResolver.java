@@ -39,25 +39,25 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
         String accessToken = jwtUtils.extractValueByCookieName(cookies, authProperty.getAccessTokenCookieName());
 
         if (parameter.getParameterType().equals(AuthenticatedMember.class)) {
-            return getAuthenticatedMember(accessToken);
+            return generateAuthenticatedMember(accessToken);
         } else {
             String refreshToken = jwtUtils.extractValueByCookieName(cookies, authProperty.getRefreshTokenCookieName());
-            return getRefreshRequest(accessToken, refreshToken);
+            return generateRefreshRequest(accessToken, refreshToken);
         }
     }
 
-    public AuthenticatedMember getAuthenticatedMember(String accessToken) {
+    public AuthenticatedMember generateAuthenticatedMember(String accessToken) {
         try {
-            Claims payload = jwtUtils.validateAndParseToken(accessToken).getPayload();
-            Long memberId = extractMemberId(payload);
+            Claims claims = jwtUtils.validateAndParseToken(accessToken).getPayload();
+            Long memberId = extractMemberId(claims);
             return createAuthenticatedMember(memberId);
         } catch (ExpiredJwtException e) {
             throw new Unauthorized("Expired JWT token");
         }
     }
 
-    private Long extractMemberId(Claims payload) {
-        String memberId = payload.get(AuthProperty.MEMBER_ID, String.class);
+    private Long extractMemberId(Claims claims) {
+        String memberId = claims.get(AuthProperty.MEMBER_ID, String.class);
         return Long.parseLong(memberId);
     }
 
@@ -67,9 +67,9 @@ public class AuthResolver implements HandlerMethodArgumentResolver {
                 .build();
     }
 
-    private RefreshRequest getRefreshRequest(String accessToken, String refreshToken) {
-        Claims payload = getClaimsEvenIfExpired(accessToken);
-        Long memberId = extractMemberId(payload);
+    private RefreshRequest generateRefreshRequest(String accessToken, String refreshToken) {
+        Claims claims = getClaimsEvenIfExpired(accessToken);
+        Long memberId = extractMemberId(claims);
         return createRefreshRequest(refreshToken, memberId);
     }
 

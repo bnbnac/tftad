@@ -24,13 +24,7 @@ public class MemberAuthService implements AuthService {
     private final CodeService codeService;
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
-
-    @Override
-    public void check(AuthenticatedMember authenticatedMember) {
-        if (authenticatedMember.getId() == null) {
-            throw new Unauthorized();
-        }
-    }
+    private final MemberService memberService;
 
     @Override
     public Long login(Login login) {

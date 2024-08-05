@@ -91,10 +91,8 @@ public class Post {
         this.memberId = inheritedMemberId;
     }
 
+
     public boolean isOwnedBy(Long memberId) {
-        if (memberId == null) {
-            return false;
-        }
-        return memberId.equals(this.memberId);
+        return this.memberId.equals(memberId);
     }
 }

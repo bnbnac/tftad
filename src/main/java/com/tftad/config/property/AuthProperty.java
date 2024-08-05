@@ -14,8 +14,6 @@ public class AuthProperty {
     public static final String AUTHORIZATION_CODE = "authorization_code";
     public static final String MAIL_SENDER = "tftad.com@gmail.com";
 
-    private String googleCookieName;
-    private Long googleCookieMaxAgeInDays;
     private String accessTokenCookieName;
     private Long accessTokenCookieMaxAgeInDays;
     private String refreshTokenCookieName;
