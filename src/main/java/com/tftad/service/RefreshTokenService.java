@@ -67,7 +67,7 @@ public class RefreshTokenService {
     }
 
     public List<TokenResponse> getListOf(Long memberId) {
-        return refreshTokenRepository.findByMemberIdOrderByExpiryDate(memberId).stream()
+        return refreshTokenRepository.findByMemberId(memberId).stream()
                 .map(TokenResponse::new)
                 .collect(Collectors.toList());
     }
