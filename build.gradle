@@ -36,6 +36,8 @@ dependencies {
     implementation 'org.springframework.security:spring-security-crypto'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-test'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     testImplementation 'junit:junit:4.13.1'
