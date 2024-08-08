@@ -138,15 +138,7 @@ public class AuthController {
     }
 
     @DeleteMapping("/auth/logout/{tokenId}")
-    public ResponseEntity<Void> logout(@PathVariable Long tokenId, AuthenticatedMember authenticatedMember) {
+    public void logout(@PathVariable Long tokenId, AuthenticatedMember authenticatedMember) {
         authService.logout(tokenId, authenticatedMember);
-
-        ResponseCookie accessTokenCookie = createExpiredCookie(authProperty.getAccessTokenCookieName());
-        ResponseCookie refreshTokenCookie = createExpiredCookie(authProperty.getRefreshTokenCookieName());
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .build();
     }
 }
